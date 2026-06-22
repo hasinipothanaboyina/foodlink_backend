@@ -14,7 +14,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: { rejectUnauthorized: false }  // ← ee line add cheyyи
+  ssl: { rejectUnauthorized: false },  // ← ee line add cheyyи
 });
 
 // Test connection on startup
