@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center;">JD</div>
+                John's Bakery
+            </div>
+        </div>
+    </nav>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+                <li><a href="my-donations.html"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
+                <li><a href="ngo-partners.html"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
+                <li><a href="#" id="notificationsLink"><i class="fa-solid fa-bell"></i> Notifications <span id="notifCountBadge" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto; display:none;">0</span></a></li>
+                <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2>Welcome back, John!</h2>
+                    <p style="color: var(--text-muted);">Here's the impact you've made this month.</p>
+                </div>
+            </div>
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4>Meals Donated</h4>
+                        <p>1,250</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: var(--secondary); background: rgba(59, 130, 246, 0.1);"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <div class="metric-info">
+                        <h4>NGOs Helped</h4>
+                        <p>12</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="metric-info">
+                        <h4>CO2 Saved (kg)</h4>
+                        <p>450</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Active Donations & AI Matching -->
+            <h3 style="margin-bottom: 1rem;">Active Deliveries</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Donation ID</th>
+                            <th>Items</th>
+                            <th>AI Matched NGO</th>
+                            <th>Distance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donationsTableBody">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading your donations...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <!-- Notification Banner (shown only for real recent activity) -->
+    <div id="notificationBanner" class="notification-banner">
+        <i class="fa-solid fa-circle-check" style="color: var(--primary); font-size: 1.5rem;"></i>
+        <div>
+            <h4 id="notifBannerTitle" style="margin-bottom: 0.2rem;">Update</h4>
+            <p id="notifBannerText" style="font-size: 0.9rem; color: var(--text-muted);"></p>
+        </div>
+    </div>
+
+    <!-- Notifications Dropdown Panel -->
+    <div id="notificationsPanel" style="display:none; position: fixed; top: 80px; left: 300px; width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; max-height: 400px; overflow-y: auto;">
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">Recent Activity</div>
+        <div id="notificationsList" style="padding: 0.5rem;">
+            <p style="padding: 1rem; color: var(--text-muted); text-align:center;">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Donation Detail Modal -->
+    <div id="donationModalOverlay" style="display:none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: var(--surface); border-radius: var(--radius-lg); max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-lg); position: relative;">
+            <button id="closeDonationModal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 style="margin-bottom: 1.5rem;">Donation Details</h3>
+            <div id="donationModalBody" style="display: flex; flex-direction: column; gap: 0.8rem; color: var(--text-main);">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

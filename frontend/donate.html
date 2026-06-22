@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Food | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="background: var(--background);">
+    <nav class="navbar glass">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="auth.html" class="btn btn-outline" style="padding: 0.5rem 1rem;">Sign Out</a>
+        </div>
+    </nav>
+    <div class="form-container">
+        <div class="auth-card wide">
+            <div class="auth-header">
+                <h2>Register a Donation</h2>
+                <p style="color: var(--text-muted);">Fill in the details below. Our AI will automatically match you with the nearest NGO in need.</p>
+            </div>
+            
+            <form id="donationForm">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="foodType">Food Category</label>
+                        <select id="foodType" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <option value="cooked">Cooked Meals</option>
+                            <option value="produce">Fresh Produce</option>
+                            <option value="packaged">Packaged Goods</option>
+                            <option value="bakery">Bakery / Bread</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantity">Quantity (Approx. Meals)</label>
+                        <input type="number" id="quantity" class="form-control" min="1" placeholder="e.g. 50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryTime">Must be picked up by</label>
+                        <input type="datetime-local" id="expiryTime" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="description">Additional Details</label>
+                        <textarea id="description" class="form-control" rows="3" placeholder="Dietary info, storage requirements, etc."></textarea>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Pickup Location</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <input type="text" id="address" class="form-control" placeholder="Detecting your location..." readonly required>
+                            <button type="button" id="getLocationBtn" class="btn btn-outline" style="white-space: nowrap;">
+                                <i class="fa-solid fa-location-crosshairs"></i> Locate Me
+                            </button>
+                        </div>
+                        <div id="mapPlaceholder" class="map-placeholder" style="display: none;">
+                            <i class="fa-solid fa-map-location-dot" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                            Map Preview (Location Acquired)
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; text-align: right;">
+                    <button type="submit" class="btn btn-primary" id="submitDonationBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Donation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Loading Overlay for Submit -->
+    <div id="loadingOverlay" style="display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; flex-direction: column;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <h3>AI is matching your donation...</h3>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

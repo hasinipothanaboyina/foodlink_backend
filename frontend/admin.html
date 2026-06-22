@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // ── ADMIN GUARD ── Redirect non-admins away before page renders
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'admin') {
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar glass" style="background: #1e293b; color: white;">
+        <a href="index.html" class="logo" style="color: white;">
+            <i class="fa-solid fa-shield-halved"></i> FoodLink Admin
+        </a>
+        <div class="nav-links">
+            <a href="#" id="adminLogoutBtn" class="btn btn-outline" style="border-color: #334155; color: white;">System Logout</a>
+        </div>
+    </nav>
+    <div class="dashboard-layout" style="background: #0f172a;">
+        <aside class="sidebar" style="background: #1e293b; border-color: #334155;">
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" style="color: white; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-globe"></i> Global Overview</a></li>
+                <li><a href="#" style="color: #94a3b8;"><i class="fa-solid fa-users"></i> User Management</a></li>
+                <li><a href="#" style="color: #94a3b8;"><i class="fa-solid fa-building-ngo"></i> NGO Approvals</a></li>
+                <li><a href="#" style="color: #94a3b8;"><i class="fa-solid fa-triangle-exclamation"></i> Reported Issues</a></li>
+            </ul>
+        </aside>
+        <main class="main-content" style="color: white;">
+            <div class="dashboard-header">
+                <div>
+                    <h2>System Status Overview</h2>
+                    <p style="color: #94a3b8;" id="adminSubtitle">Loading system status...</p>
+                </div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card" style="background: #1e293b; border-color: #334155;">
+                    <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4 style="color: #94a3b8;">Total Meals Donated</h4>
+                        <p style="color: white;" id="statMeals">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: #1e293b; border-color: #334155;">
+                    <div class="metric-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.1);"><i class="fa-solid fa-arrows-down-to-people"></i></div>
+                    <div class="metric-info">
+                        <h4 style="color: #94a3b8;">Total Users</h4>
+                        <p style="color: white;" id="statUsers">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: #1e293b; border-color: #334155;">
+                    <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);"><i class="fa-solid fa-building-ngo"></i></div>
+                    <div class="metric-info">
+                        <h4 style="color: #94a3b8;">Approved NGOs</h4>
+                        <p style="color: white;" id="statNgos">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: #1e293b; border-color: #334155;">
+                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fa-solid fa-clock"></i></div>
+                    <div class="metric-info">
+                        <h4 style="color: #94a3b8;">Pending NGO Approvals</h4>
+                        <p style="color: white;" id="statPendingNgos">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: #1e293b; border-color: #334155;">
+                    <div class="metric-icon" style="color: #f43f5e; background: rgba(244, 63, 94, 0.1);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="metric-info">
+                        <h4 style="color: #94a3b8;">Unmatched Donations</h4>
+                        <p style="color: white;" id="statFailed">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; color: white;">Pending NGO Approvals</h3>
+            <div class="table-container" style="background: #1e293b; border-color: #334155; margin-bottom: 2rem;">
+                <table style="color: #cbd5e1;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">NGO Name</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Registered By</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Capacity</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Accepted Types</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingNgosBody">
+                        <tr><td colspan="5" style="text-align:center;color:#94a3b8;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; color: white;">Recent System Logs</h3>
+            <div class="table-container" style="background: #1e293b; border-color: #334155;">
+                <table style="color: #cbd5e1;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Timestamp</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Event</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Details</th>
+                            <th style="background: #0f172a; border-color: #334155; color: #94a3b8;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="systemLogsBody">
+                        <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
