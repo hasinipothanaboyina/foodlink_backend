@@ -4,7 +4,7 @@
  */
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:5000/api'; // Your backend URL
+const API_BASE = 'https://foodlink-ai-1-ii16.onrender.com/api'; // Your backend URL
 
 // Helper to get the JWT token stored after login
 function getToken() {
@@ -76,25 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── REGISTER FORM (if you add one) ───────────────────────────────────────
-  const registerForm = document.getElementById('registerForm');
-  if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const role = document.getElementById('role')?.value || 'donor';
 
-      try {
-        const data = await apiCall('/auth/register', 'POST', { name, email, password, role });
-        alert(data.message);
-        if (data.userId) window.location.href = 'auth.html';
-      } catch (err) {
-        alert('Cannot connect to server.');
-      }
-    });
-  }
 
   // ── GEOLOCATION (donate.html) ─────────────────────────────────────────────
   const getLocationBtn = document.getElementById('getLocationBtn');
