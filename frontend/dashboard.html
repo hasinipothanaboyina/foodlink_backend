@@ -455,6 +455,9 @@
                         <button class="btn btn-outline req-vol-btn" data-id="${d.id}" style="padding:0.25rem 0.5rem;font-size:0.75rem;">
                             <i class="fa-solid fa-person-running"></i> Req Volunteer
                         </button>` : ''}
+                        <button class="btn btn-primary ngo-complete-btn" data-id="${d.id}" style="padding:0.25rem 0.5rem;font-size:0.75rem;margin-top:0.3rem;">
+                            <i class="fa-solid fa-check-double"></i> Mark Completed
+                        </button>
                         `}
                     </div>
                 </td>
@@ -475,6 +478,24 @@
                     showToast(e.message || 'Failed to accept. Please try again.', 'error');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Accept';
+                }
+            });
+        });
+
+        // Complete handlers
+        document.querySelectorAll('.ngo-complete-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const res = await ngoApiCall(`/donations/${id}/complete`, 'PATCH');
+                    showToast(res.message || 'Donation completed!', 'success');
+                    await loadNGOData();
+                } catch (e) {
+                    showToast(e.message || 'Failed to complete. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Mark Completed';
                 }
             });
         });

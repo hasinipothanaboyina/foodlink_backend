@@ -428,6 +428,29 @@ router.get('/ngo-incoming', authMiddleware, async (req, res) => {
   }
 });
 
+// --- NGO COMPLETE DONATION ---
+router.patch('/:id/complete', verifyToken, async (req, res) => {
+  if (req.user.role !== 'ngo') return res.status(403).json({ message: 'Only NGOs can complete donations.' });
+  try {
+    const donationId = req.params.id;
+    const [[ngo]] = await pool.query('SELECT id FROM ngos WHERE user_id = ?', [req.user.id]);
+    if (!ngo) return res.status(403).json({ message: 'NGO profile not found.' });
+
+    const [result] = await pool.query(
+      "UPDATE donations SET status = 'completed' WHERE id = ? AND ngo_id = ? AND status = 'in_transit'",
+      [donationId, ngo.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ message: 'Donation not found or not in transit.' });
+    }
+
+    res.json({ message: 'Donation marked as completed!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // ─── NGO ACCEPT DONATION ──────────────────────────────────────────────────
 // PATCH /api/donations/:id/accept
 // NOTE: These named /:id routes are registered here (after /ngo-incoming)
