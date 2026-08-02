@@ -289,6 +289,10 @@ async function loadUsers() {
   if (!tbody) return;
   try {
     const data = await adminApiCall('/admin/users');
+    if (data.message) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f43f5e;">Error: ${data.message}</td></tr>`;
+      return;
+    }
     if (!data.users || data.users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No users found.</td></tr>';
       return;
