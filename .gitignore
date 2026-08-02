@@ -1,3 +1,7 @@
-backend/node_modules/
 node_modules/
 .env
+backend/node_modules/
+frontend/node_modules/
+.system_generated/
+.user_uploaded/
+scratch/

@@ -10,22 +10,70 @@
 <body>
     <nav class="navbar glass" style="padding: 0.8rem 5%;">
         <a href="index.html" class="logo">
-            <i class="fa-solid fa-leaf"></i> FoodLink
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
         </a>
-        <div class="nav-links">
-            <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center;">JD</div>
-                John's Bakery
+        <div class="nav-links" style="display: flex; gap: 1rem; align-items: center;">
+            <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; position: relative;">
+                <div id="userInitials"
+                     title=""
+                     style="width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: white;
+                            display: flex; align-items: center; justify-content: center; font-weight: 700;
+                            cursor: default; font-size: 0.95rem; box-shadow: 0 2px 8px rgba(45,90,74,0.25);
+                            transition: box-shadow 0.2s;"
+                     onmouseenter="this.style.boxShadow='0 4px 16px rgba(45,90,74,0.4)'"
+                     onmouseleave="this.style.boxShadow='0 2px 8px rgba(45,90,74,0.25)'">D</div>
+                <!-- Phone number hidden for privacy — visible only as tooltip on the avatar -->
+                <span id="userNameDisplay" style="display: none;">Guest</span>
             </div>
+            <a href="#" id="donorLogoutBtn" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Logout</a>
         </div>
     </nav>
+    <script>
+        // Show the real logged-in user's name if available; otherwise keep
+        // a safe generic label. Never redirects, so this page still works
+        // for the current no-login donation flow.
+        (function () {
+            try {
+                const user = JSON.parse(localStorage.getItem('foodlink_user') || 'null');
+                if (user) {
+                    if (user.role === 'ngo') {
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                    if (user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+                    const displayName = user.name || user.phone || 'Donor';
+                    // Keep phone HIDDEN from view — only show as tooltip on hover
+                    const avatar = document.getElementById('userInitials');
+                    if (user.phone) {
+                        // Show first digit as initial, full number as private hover tooltip
+                        avatar.textContent = user.phone.toString()[0];
+                        avatar.title = 'Logged in';
+                    } else if (user.name) {
+                        const initials = user.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                        avatar.textContent = initials || 'D';
+                        avatar.title = user.name;
+                    }
+                } else {
+                    window.location.href = 'index.html'; // Protect page
+                }
+            } catch (e) { /* leave defaults as-is */ }
+        })();
+    </script>
     <div class="dashboard-layout">
         <aside class="sidebar" id="sidebar">
             <ul class="sidebar-menu">
-                <li><a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
                 <li><a href="my-donations.html" class="active"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
-                <li><a href="ngo-partners.html"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
-                <li><a href="#" id="notificationsLink"><i class="fa-solid fa-bell"></i> Notifications <span id="notifCountBadge" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto; display:none;">0</span></a></li>
+                <li><a href="donate.html"><i class="fa-solid fa-hand-holding-heart"></i> Donate Again</a></li>
+                <li><a href="trackdonation.html"><i class="fa-solid fa-truck-fast"></i> Track by Phone</a></li>
                 <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
             </ul>
         </aside>
@@ -34,6 +82,31 @@
                 <div>
                     <h2>My Donations</h2>
                     <p style="color: var(--text-muted);">Your complete donation history.</p>
+                </div>
+            </div>
+
+            <!-- Impact Dashboard -->
+            <div class="metrics-grid" style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="metric-card" style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
+                    <div class="metric-icon" style="color:#10b981;background:rgba(16,185,129,0.1); width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4 style="margin:0; font-size:0.9rem; color:var(--text-muted);">Meals Donated</h4>
+                        <p id="impactMeals" style="margin:0; font-size:1.5rem; font-weight:600;">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
+                    <div class="metric-icon" style="color:#3b82f6;background:rgba(59,130,246,0.1); width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;"><i class="fa-solid fa-box-open"></i></div>
+                    <div class="metric-info">
+                        <h4 style="margin:0; font-size:0.9rem; color:var(--text-muted);">Total Donations</h4>
+                        <p id="impactTotal" style="margin:0; font-size:1.5rem; font-weight:600;">—</p>
+                    </div>
+                </div>
+                <div class="metric-card" style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;">
+                    <div class="metric-icon" style="color:#10b981;background:rgba(16,185,129,0.1); width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="metric-info">
+                        <h4 style="margin:0; font-size:0.9rem; color:var(--text-muted);">CO2 Saved (kg)</h4>
+                        <p id="impactCO2" style="margin:0; font-size:1.5rem; font-weight:600;">—</p>
+                    </div>
                 </div>
             </div>
 
@@ -86,14 +159,6 @@
             <div id="donationModalBody" style="display: flex; flex-direction: column; gap: 0.8rem; color: var(--text-main);">
                 Loading...
             </div>
-        </div>
-    </div>
-
-    <!-- Notifications Dropdown Panel -->
-    <div id="notificationsPanel" style="display:none; position: fixed; top: 80px; left: 300px; width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; max-height: 400px; overflow-y: auto;">
-        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">Recent Activity</div>
-        <div id="notificationsList" style="padding: 0.5rem;">
-            <p style="padding: 1rem; color: var(--text-muted); text-align:center;">Loading...</p>
         </div>
     </div>
 

@@ -3,114 +3,753 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | FoodLink AI</title>
+    <title>NGO Dashboard | FoodLink AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    <script>
+        // ── NGO GUARD ── Only NGO-role users can see this page
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'ngo') {
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .badge-matched   { background: rgba(59,130,246,0.12); color: #3b82f6; }
+        .badge-in_transit{ background: rgba(245,158,11,0.12); color: #f59e0b; }
+        .badge-completed { background: rgba(16,185,129,0.12); color: #10b981; }
+        .badge-pending   { background: rgba(148,163,184,0.12); color: #94a3b8; }
+        .badge-cancelled { background: rgba(244,63,94,0.12);  color: #f43f5e; }
+
+        .action-btn-group { display: flex; gap: 0.5rem; }
+
+        .ngo-alert-banner {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(45,90,74,0.08));
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .ngo-alert-banner i { color: #10b981; font-size: 1.2rem; }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 0 rgba(16,185,129, 0.4);
+            animation: pulse-ring 1.5s infinite;
+            margin-right: 0.4rem;
+        }
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129, 0.4); }
+            70%  { box-shadow: 0 0 0 8px rgba(16,185,129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129, 0); }
+        }
+
+        #toastContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            background: #1e293b;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-size: 0.88rem;
+            animation: slideIn 0.3s ease;
+            max-width: 320px;
+        }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error   { border-left: 4px solid #f43f5e; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+    <nav class="navbar glass">
         <a href="index.html" class="logo">
-            <i class="fa-solid fa-leaf"></i> FoodLink
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
         </a>
-        <div class="nav-links">
-            <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center;">JD</div>
-                John's Bakery
+        <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <!-- Status Dropdown -->
+                <div class="status-dropdown-wrapper" style="position: relative;">
+                    <select id="ngoAvailability" style="appearance: none; -webkit-appearance: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #059669; padding: 0.4rem 2.2rem 0.4rem 1rem; font-size: 0.82rem; font-weight: 700; border-radius: 999px; cursor: pointer; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease;">
+                        <option value="active" style="color: #1e293b;">🟢 Active</option>
+                        <option value="limited" style="color: #1e293b;">🟡 Limited</option>
+                        <option value="offline" style="color: #1e293b;">🔴 Offline</option>
+                    </select>
+                    <i class="fa-solid fa-caret-down" style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); color: #059669; pointer-events: none; font-size: 0.8rem;"></i>
+                </div>
+                
+                <!-- Profile Badge -->
+                <div style="display: flex; align-items: center; gap: 0.6rem; background: white; padding: 0.3rem 0.8rem 0.3rem 0.3rem; border-radius: 999px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div id="ngoInitials" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px;">LF</div>
+                    <span id="ngoNameNav" style="font-size: 0.9rem; font-weight: 600; color: var(--text-dark); white-space: nowrap; text-transform: capitalize; padding-right: 0.3rem;">Loading...</span>
+                </div>
             </div>
+
+            <!-- Logout Button -->
+            <a href="#" id="ngoLogoutBtn" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; font-weight: 600; color: #f43f5e; padding: 0.45rem 1rem; border-radius: 999px; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.2); text-decoration: none; transition: all 0.3s ease;">
+                <i class="fa-solid fa-power-off"></i> Logout
+            </a>
         </div>
     </nav>
+
     <div class="dashboard-layout">
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar">
             <ul class="sidebar-menu">
-                <li><a href="dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
-                <li><a href="my-donations.html"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
-                <li><a href="ngo-partners.html"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
-                <li><a href="#" id="notificationsLink"><i class="fa-solid fa-bell"></i> Notifications <span id="notifCountBadge" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto; display:none;">0</span></a></li>
-                <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
+                <li><a href="#" id="tab-overview" class="active"><i class="fa-solid fa-chart-line"></i> Overview</a></li>
+                <li><a href="#" id="tab-incoming"><i class="fa-solid fa-bell"></i> Incoming Donations <span id="incomingBadge" style="display:none;background:#f43f5e;color:white;border-radius:999px;padding:0.1rem 0.5rem;font-size:0.72rem;margin-left:0.3rem;">0</span></a></li>
+                <li><a href="#" id="tab-history"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li style="margin-top:2rem;">
+                    <a href="#" id="tab-network" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-handshake"></i> NGO Network
+                    </a>
+                </li>
             </ul>
         </aside>
+
         <main class="main-content">
-            <div class="dashboard-header">
-                <div>
-                    <h2>Welcome back, John!</h2>
-                    <p style="color: var(--text-muted);">Here's the impact you've made this month.</p>
-                </div>
-            </div>
-            <!-- Metrics -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-icon"><i class="fa-solid fa-utensils"></i></div>
-                    <div class="metric-info">
-                        <h4>Meals Donated</h4>
-                        <p>1,250</p>
+
+            <!-- ── OVERVIEW TAB ───────────────────────────────────── -->
+            <div id="view-overview" class="admin-view" style="display:block;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 id="ngoWelcomeTitle">NGO Dashboard</h2>
+                        <p style="color:var(--text-muted);" id="ngoSubtitle">Loading your organisation data...</p>
                     </div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-icon" style="color: var(--secondary); background: rgba(59, 130, 246, 0.1);"><i class="fa-solid fa-hand-holding-heart"></i></div>
-                    <div class="metric-info">
-                        <h4>NGOs Helped</h4>
-                        <p>12</p>
+
+                <div class="ngo-alert-banner" id="newDonationAlert" style="display:none;">
+                    <span class="pulse-dot"></span>
+                    <span><strong>New donation alert!</strong> You have incoming donations waiting for your response.</span>
+                    <a href="#" id="viewIncomingLink" style="margin-left:auto;color:var(--primary);font-weight:600;white-space:nowrap;">View &rarr;</a>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color:#10b981;background:rgba(16,185,129,0.1);"><i class="fa-solid fa-utensils"></i></div>
+                        <div class="metric-info">
+                            <h4>Total Meals Received</h4>
+                            <p id="ngoStatMeals">—</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color:#3b82f6;background:rgba(59,130,246,0.1);"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="metric-info">
+                            <h4>Total Donations</h4>
+                            <p id="ngoStatTotal">—</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color:#f59e0b;background:rgba(245,158,11,0.1);"><i class="fa-solid fa-truck-fast"></i></div>
+                        <div class="metric-info">
+                            <h4>Active / In Transit</h4>
+                            <p id="ngoStatPending">—</p>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color:#10b981;background:rgba(16,185,129,0.1);"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="metric-info">
+                            <h4>Completed</h4>
+                            <p id="ngoStatCompleted">—</p>
+                        </div>
                     </div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fa-solid fa-leaf"></i></div>
-                    <div class="metric-info">
-                        <h4>CO2 Saved (kg)</h4>
-                        <p>450</p>
-                    </div>
+
+                <h3 style="margin-bottom:1rem;">Recent Donations</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Food</th>
+                                <th>Donor</th>
+                                <th>Delivery</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ngoRecentBody">
+                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <!-- Active Donations & AI Matching -->
-            <h3 style="margin-bottom: 1rem;">Active Deliveries</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Donation ID</th>
-                            <th>Items</th>
-                            <th>AI Matched NGO</th>
-                            <th>Distance</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="donationsTableBody">
-                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading your donations...</td></tr>
-                    </tbody>
-                </table>
+
+            <!-- ── INCOMING DONATIONS TAB ─────────────────────────── -->
+            <div id="view-incoming" class="admin-view" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Incoming Donations</h2>
+                        <p style="color:var(--text-muted);">Accept or reject donations matched to your NGO by AI.</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Food</th>
+                                <th>Qty</th>
+                                <th>Donor Name</th>
+                                <th>Donor Phone</th>
+                                <th>Delivery</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ngoIncomingBody">
+                            <tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- ── HISTORY TAB ────────────────────────────────────── -->
+            <div id="view-history" class="admin-view" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Donation History</h2>
+                        <p style="color:var(--text-muted);">All past and completed donations for your NGO.</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Food</th>
+                                <th>Qty</th>
+                                <th>Donor</th>
+                                <th>Delivery</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Map</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ngoHistoryBody">
+                            <tr><td colspan="8" style="text-align:center;color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ── NGO NETWORK TAB ──────────────────────────────────── -->
+            <div id="view-network" class="admin-view" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>NGO Partners</h2>
+                        <p style="color:var(--text-muted);" id="networkSubtitle">All NGOs registered on FoodLink AI.</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button type="button" id="findNearMeBtn" class="btn btn-outline">
+                        <i class="fa-solid fa-location-crosshairs"></i> Sort by Distance from Me
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                        <label for="cityFilter" style="font-weight: 500; color: var(--text-muted);">Filter by city:</label>
+                        <select id="cityFilter" class="form-control" style="min-width: 150px; padding: 0.5rem;">
+                            <option value="all">All Cities</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="ngoCardsGrid">
+                    <!-- NGO cards rendered here -->
+                </div>
+            </div>
+
         </main>
     </div>
-    <!-- Notification Banner (shown only for real recent activity) -->
-    <div id="notificationBanner" class="notification-banner">
-        <i class="fa-solid fa-circle-check" style="color: var(--primary); font-size: 1.5rem;"></i>
-        <div>
-            <h4 id="notifBannerTitle" style="margin-bottom: 0.2rem;">Update</h4>
-            <p id="notifBannerText" style="font-size: 0.9rem; color: var(--text-muted);"></p>
-        </div>
-    </div>
 
-    <!-- Notifications Dropdown Panel -->
-    <div id="notificationsPanel" style="display:none; position: fixed; top: 80px; left: 300px; width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; max-height: 400px; overflow-y: auto;">
-        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">Recent Activity</div>
-        <div id="notificationsList" style="padding: 0.5rem;">
-            <p style="padding: 1rem; color: var(--text-muted); text-align:center;">Loading...</p>
-        </div>
-    </div>
-
-    <!-- Donation Detail Modal -->
-    <div id="donationModalOverlay" style="display:none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 2000; align-items: center; justify-content: center;">
-        <div style="background: var(--surface); border-radius: var(--radius-lg); max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-lg); position: relative;">
-            <button id="closeDonationModal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <h3 style="margin-bottom: 1.5rem;">Donation Details</h3>
-            <div id="donationModalBody" style="display: flex; flex-direction: column; gap: 0.8rem; color: var(--text-main);">
-                Loading...
-            </div>
-        </div>
-    </div>
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
 
     <script src="script.js"></script>
+    <script>
+    const NGO_API = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+
+    function getToken() { return localStorage.getItem('foodlink_token'); }
+
+    function showToast(msg, type = 'success') {
+        const tc = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}"></i> ${msg}`;
+        tc.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+
+    async function ngoApiCall(endpoint, method = 'GET', body = null) {
+        const opts = {
+            method,
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` }
+        };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(`${NGO_API}${endpoint}`, opts);
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.message || `HTTP error! status: ${res.status}`);
+        }
+        return data;
+    }
+
+    let _allDonations = [];
+
+    async function loadNGOData() {
+        try {
+            const data = await ngoApiCall('/donations/ngo-incoming');
+
+            if (data.message && !data.ngo) {
+                document.getElementById('ngoSubtitle').textContent = data.message;
+                renderRecentTable([]);
+                renderIncomingTable([]);
+                renderHistoryTable([]);
+                return;
+            }
+
+            _allDonations = data.donations || [];
+
+            // Nav name
+            const ngo = data.ngo || {};
+            document.getElementById('ngoWelcomeTitle').textContent = ngo.name || 'NGO Dashboard';
+            document.getElementById('ngoSubtitle').textContent = `${ngo.city || ''} — Capacity: ${ngo.capacity || '—'} meals`;
+            document.getElementById('ngoNameNav').textContent = ngo.name || 'NGO';
+            const initials = (ngo.name || 'N').trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+            document.getElementById('ngoInitials').textContent = initials;
+            
+            const statusSelect = document.getElementById('ngoAvailability');
+            if (statusSelect && ngo.availability_status) {
+                statusSelect.value = ngo.availability_status;
+                updateStatusDropdownStyles(statusSelect);
+            }
+
+            // Stats
+            const s = data.stats || {};
+            document.getElementById('ngoStatMeals').textContent = (s.totalMeals || 0).toLocaleString();
+            document.getElementById('ngoStatTotal').textContent = (s.totalDonations || 0).toLocaleString();
+            document.getElementById('ngoStatPending').textContent = (s.pendingDonations || 0).toLocaleString();
+            document.getElementById('ngoStatCompleted').textContent = (s.completedDonations || 0).toLocaleString();
+
+            // Alert banner for matched/incoming
+            const incoming = _allDonations.filter(d => d.status === 'matched');
+            if (incoming.length > 0) {
+                document.getElementById('newDonationAlert').style.display = 'flex';
+                const badge = document.getElementById('incomingBadge');
+                badge.textContent = incoming.length;
+                badge.style.display = 'inline';
+            }
+
+            // Recent donations (overview tab)
+            renderRecentTable(_allDonations.slice(0, 8));
+
+            // Incoming tab
+            renderIncomingTable(_allDonations);
+
+            // History tab
+            renderHistoryTable(_allDonations);
+
+        } catch (err) {
+            document.getElementById('ngoSubtitle').textContent = 'Cannot connect to server. Is the backend running?';
+            console.error(err);
+        }
+    }
+
+    function statusBadge(status) {
+        const map = {
+            matched: 'badge-matched',
+            in_transit: 'badge-in_transit',
+            completed: 'badge-completed',
+            pending: 'badge-pending',
+            cancelled: 'badge-cancelled',
+        };
+        return `<span class="status-badge ${map[status] || 'badge-pending'}">${status.replace('_',' ')}</span>`;
+    }
+
+    function renderRecentTable(donations) {
+        const tbody = document.getElementById('ngoRecentBody');
+        if (!donations.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No donations yet. When AI matches food to your NGO, it appears here!</td></tr>';
+            return;
+        }
+        tbody.innerHTML = donations.map(d => `
+            <tr>
+                <td>#FL-${d.id}</td>
+                <td>${d.quantity}x ${d.food_type}</td>
+                <td>${d.donor_name || 'Anonymous'}</td>
+                <td>${d.delivery_method === 'donor_delivers' ? '<i class="fa-solid fa-car" style="color:var(--primary)"></i> Drop-off' : '<i class="fa-solid fa-truck" style="color:var(--secondary)"></i> Pick-up'}</td>
+                <td>${statusBadge(d.status)}</td>
+                <td>${new Date(d.created_at).toLocaleDateString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderIncomingTable(donations) {
+        const tbody = document.getElementById('ngoIncomingBody');
+        const active = donations.filter(d => ['matched', 'in_transit'].includes(d.status));
+        if (!active.length) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">No active donations right now. AI will notify you when a new donation is matched!</td></tr>';
+            return;
+        }
+        tbody.innerHTML = active.map(d => {
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.address || '')}`;
+            const isPickup = d.delivery_method === 'ngo_pickup';
+            return `
+            <tr id="donation-row-${d.id}" style="${d.is_urgent ? 'background: rgba(244,63,94,0.05); border-left: 3px solid #f43f5e;' : ''}">
+                <td><strong>#FL-${d.id}</strong></td>
+                <td>${d.is_urgent ? '<span style="color:#f43f5e;font-size:0.7rem;font-weight:700;display:block;"><i class="fa-solid fa-fire"></i> URGENT</span>' : ''}${d.food_type}</td>
+                <td>${d.quantity}</td>
+                <td>${d.donor_name || 'Anonymous'}</td>
+                <td><a href="tel:${d.donor_phone}" style="color:var(--primary);">${d.donor_phone || '—'}</a></td>
+                <td>${isPickup ? '<span style="color:var(--secondary);font-weight:500;"><i class="fa-solid fa-truck"></i> We Pick Up</span>' : '<span style="color:var(--primary);font-weight:500;"><i class="fa-solid fa-car"></i> Donor Delivers</span>'}</td>
+                <td><a href="${mapUrl}" target="_blank" style="color:var(--primary);font-size:0.85rem;"><i class="fa-solid fa-map-location-dot"></i> View Map</a></td>
+                <td>${statusBadge(d.status)}</td>
+                <td>
+                    <div class="action-btn-group" style="flex-direction: column; align-items: flex-start; gap: 0.3rem;">
+                        ${d.status === 'matched' ? `
+                        <div style="display:flex; gap:0.3rem;">
+                            <button class="btn btn-primary ngo-accept-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;">
+                                <i class="fa-solid fa-check"></i> Accept
+                            </button>
+                            <button class="btn btn-outline ngo-reject-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;color:#f43f5e;border-color:#f43f5e;">
+                                <i class="fa-solid fa-xmark"></i> Reject
+                            </button>
+                        </div>` : `
+                        <span style="color:#f59e0b;font-size:0.85rem;"><i class="fa-solid fa-truck-fast"></i> In Transit</span>
+                        ${isPickup ? `
+                        <button class="btn btn-outline req-vol-btn" data-id="${d.id}" style="padding:0.25rem 0.5rem;font-size:0.75rem;">
+                            <i class="fa-solid fa-person-running"></i> Req Volunteer
+                        </button>` : ''}
+                        `}
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        // Accept handlers
+        document.querySelectorAll('.ngo-accept-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const res = await ngoApiCall(`/donations/${id}/accept`, 'PATCH');
+                    showToast(res.message || 'Donation accepted!', 'success');
+                    await loadNGOData();
+                } catch (e) {
+                    showToast(e.message || 'Failed to accept. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Accept';
+                }
+            });
+        });
+
+        // Reject handlers
+        document.querySelectorAll('.ngo-reject-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Reject this donation? The AI will immediately search for the next closest NGO.')) return;
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const res = await ngoApiCall(`/donations/${id}/reject`, 'PATCH');
+                    showToast(res.message || 'Donation rejected. AI is re-matching...', res.nextNGO ? 'success' : 'error');
+                    await loadNGOData();
+                } catch (e) {
+                    showToast(e.message || 'Failed to reject. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Reject';
+                }
+            });
+        });
+
+        // Request Volunteer handlers
+        document.querySelectorAll('.req-vol-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const res = await ngoApiCall(`/volunteers/request-pickup`, 'POST', { donation_id: id });
+                    showToast(res.message || 'Volunteer requested!', 'success');
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Requested';
+                } catch (e) {
+                    showToast(e.message || 'Failed to request volunteer.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-person-running"></i> Req Volunteer';
+                }
+            });
+        });
+    }
+
+    function renderHistoryTable(donations) {
+        const tbody = document.getElementById('ngoHistoryBody');
+        const hist = donations.filter(d => ['completed', 'cancelled'].includes(d.status));
+        if (!hist.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No completed donations yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = hist.map(d => {
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.address || '')}`;
+            return `
+            <tr>
+                <td>#FL-${d.id}</td>
+                <td>${d.food_type}</td>
+                <td>${d.quantity}</td>
+                <td>${d.donor_name || 'Anonymous'}</td>
+                <td>${d.delivery_method === 'donor_delivers' ? 'Drop-off' : 'Pick-up'}</td>
+                <td>${statusBadge(d.status)}</td>
+                <td>${new Date(d.created_at).toLocaleDateString()}</td>
+                <td><a href="${mapUrl}" target="_blank" style="color:var(--primary);font-size:0.85rem;"><i class="fa-solid fa-location-arrow"></i> Map</a></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateStatusDropdownStyles(selectEl) {
+        if (!selectEl) return;
+        const iconEl = selectEl.nextElementSibling;
+        if (selectEl.value === 'active') {
+            selectEl.style.background = 'rgba(16, 185, 129, 0.1)';
+            selectEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            selectEl.style.color = '#059669';
+            if (iconEl) iconEl.style.color = '#059669';
+        } else if (selectEl.value === 'limited') {
+            selectEl.style.background = 'rgba(245, 158, 11, 0.1)';
+            selectEl.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+            selectEl.style.color = '#d97706';
+            if (iconEl) iconEl.style.color = '#d97706';
+        } else {
+            selectEl.style.background = 'rgba(244, 63, 94, 0.1)';
+            selectEl.style.borderColor = 'rgba(244, 63, 94, 0.3)';
+            selectEl.style.color = '#e11d48';
+            if (iconEl) iconEl.style.color = '#e11d48';
+        }
+    }
+
+    // ── Tab switching ───────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+        if (user.name) {
+            document.getElementById('ngoNameNav').textContent = user.name;
+            const initials = user.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+            document.getElementById('ngoInitials').textContent = initials;
+        }
+
+        loadNGOData();
+
+        // Auto-refresh incoming donations every 15 seconds
+        setInterval(() => {
+            // Only refresh if not doing an action like accepting/rejecting
+            if (document.querySelectorAll('.fa-spinner').length === 0) {
+                loadNGOData();
+            }
+        }, 15000);
+
+        const tabs = ['overview', 'incoming', 'history', 'network'];
+        tabs.forEach(tab => {
+            const el = document.getElementById(`tab-${tab}`);
+            if (!el) return;
+            el.addEventListener('click', e => {
+                e.preventDefault();
+                tabs.forEach(t => document.getElementById(`tab-${t}`)?.classList.remove('active'));
+                el.classList.add('active');
+                document.querySelectorAll('.admin-view').forEach(v => v.style.display = 'none');
+                document.getElementById(`view-${tab}`).style.display = 'block';
+                
+                // Always reload NGOs when network tab is clicked (fresh data)
+                if (tab === 'network') {
+                    loadNetworkNGOs();
+                }
+            });
+        });
+
+        document.getElementById('viewIncomingLink')?.addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById('tab-incoming').click();
+        });
+
+        document.getElementById('ngoLogoutBtn')?.addEventListener('click', e => {
+            e.preventDefault();
+            localStorage.removeItem('foodlink_token');
+            localStorage.removeItem('foodlink_user');
+            window.location.href = 'index.html';
+        });
+
+        // ── NGO Network Logic ──
+        setupFindNearMe();
+        document.getElementById('cityFilter')?.addEventListener('change', renderNetworkNGOs);
+
+        // Availability Toggle
+        document.getElementById('ngoAvailability')?.addEventListener('change', async (e) => {
+            const selectEl = e.target;
+            updateStatusDropdownStyles(selectEl);
+
+            try {
+                const res = await ngoApiCall('/ngos/status', 'PATCH', { status: selectEl.value });
+                showToast(`Status updated to ${selectEl.value.toUpperCase()}`);
+                
+                // Immediately re-fetch the network list if the user is on the Network tab
+                if (document.getElementById('tab-network')?.classList.contains('active')) {
+                    loadNetworkNGOs();
+                }
+            } catch(err) {
+                showToast(err.message || 'Failed to update status. Check server logs.', 'error');
+            }
+        });
+    });
+
+    let allNgos = [];
+    
+    async function loadNetworkNGOs(lat = null, lng = null) {
+        const grid = document.getElementById('ngoCardsGrid');
+        if (!grid) return;
+        grid.innerHTML = '<p style="color: var(--text-muted);">Loading NGO partners...</p>';
+        try {
+            let endpoint = '/ngos';
+            let queryParams = new URLSearchParams();
+            if (lat != null && lng != null) {
+                queryParams.append('lat', lat);
+                queryParams.append('lng', lng);
+            }
+            // Add a cache-buster to prevent the browser from serving a stale NGO list
+            queryParams.append('_t', Date.now());
+            
+            const data = await fetch(`${NGO_API}${endpoint}?${queryParams.toString()}`).then(r => r.json());
+            allNgos = data.ngos || [];
+            
+            const cityFilter = document.getElementById('cityFilter');
+            if (cityFilter) {
+                const cv = cityFilter.value || 'all';
+                const cities = [...new Set(allNgos.map(n => n.city).filter(Boolean))].sort();
+                cityFilter.innerHTML = '<option value="all">All Cities</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                if (cities.includes(cv)) cityFilter.value = cv;
+            }
+            renderNetworkNGOs();
+        } catch (err) {
+            grid.innerHTML = '<p style="color:#f43f5e;">Failed to load NGO partners.</p>';
+        }
+    }
+
+    function renderNetworkNGOs() {
+        const grid = document.getElementById('ngoCardsGrid');
+        const cityFilter = document.getElementById('cityFilter');
+        if (!grid) return;
+        
+        const selectedCity = cityFilter ? cityFilter.value : 'all';
+        let list = allNgos;
+        if (selectedCity !== 'all') list = list.filter(n => n.city === selectedCity);
+        
+        if (list.length === 0) {
+            grid.innerHTML = '<p style="color: var(--text-muted);">No NGO partners found.</p>';
+            return;
+        }
+
+        const typeLabels = { cooked: 'Cooked Meals', produce: 'Fresh Produce', packaged: 'Packaged Goods', bakery: 'Bakery / Bread' };
+        
+        // Show count header
+        const countText = `<p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.95rem;"><i class="fa-solid fa-building-ngo" style="color:var(--primary);"></i> <strong>${list.length} NGO partner${list.length !== 1 ? 's' : ''}</strong> found${selectedCity !== 'all' ? ` in ${selectedCity}` : ' across all cities'}</p>`;
+
+        const cardsHtml = list.map(ngo => {
+            const types = (ngo.accepted_types || '').split(',').map(t => t.trim()).filter(Boolean).map(t => typeLabels[t] || t).join(', ');
+            const distanceHtml = ngo.distance_km != null ? `<p style="color: var(--primary); font-weight: 500; margin-top: 0.5rem;"><i class="fa-solid fa-location-dot"></i> ${Number(ngo.distance_km).toFixed(1)} km away</p>` : '';
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ngo.name + ', ' + (ngo.address || ngo.city))}`;
+            
+            // Status Badge Setup
+            const statusColors = {
+                active: { bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', icon: '🟢', text: 'Active' },
+                limited: { bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', icon: '🟡', text: 'Limited' },
+                offline: { bg: 'rgba(244, 63, 94, 0.1)', color: '#e11d48', icon: '🔴', text: 'Offline' }
+            };
+            const s = statusColors[ngo.availability_status || 'active'];
+            const statusBadge = `<span style="font-size: 0.7rem; background: ${s.bg}; color: ${s.color}; padding: 0.2rem 0.5rem; border-radius: 999px; font-weight: 700; margin-left: 0.5rem; white-space: nowrap; border: 1px solid ${s.color}33;">${s.icon} ${s.text}</span>`;
+            
+            return `
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(45,90,74,0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;"><i class="fa-solid fa-building-ngo"></i></div>
+                    <div>
+                        <h4 style="margin: 0; text-transform: capitalize; display: flex; align-items: center; flex-wrap: wrap; gap: 0.25rem;">
+                            ${ngo.name} ${statusBadge}
+                        </h4>
+                        <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: capitalize;">${ngo.city || 'Unknown'}</span>
+                    </div>
+                  </div>
+                  <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: capitalize;"><i class="fa-solid fa-location-crosshairs"></i> ${ngo.address || 'Address not provided'}</p>
+                  <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><i class="fa-solid fa-utensils"></i> Capacity: <strong>${ngo.capacity} meals/day</strong></p>
+                  <p style="font-size: 0.85rem; color: var(--text-muted);">Accepts: ${types || 'Not specified'}</p>
+                  ${distanceHtml}
+                  <a href="${mapUrl}" target="_blank" class="btn btn-outline" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.85rem;"><i class="fa-solid fa-map"></i> Get Directions</a>
+                </div>
+            `;
+        }).join('');
+
+        // Put count text ABOVE the grid (not inside it as a grid item)
+        grid.style.display = 'block';
+        grid.innerHTML = countText + `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">${cardsHtml}</div>`;
+    }
+
+    function setupFindNearMe() {
+        const btn = document.getElementById('findNearMeBtn');
+        const subtitle = document.getElementById('networkSubtitle');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...';
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    loadNetworkNGOs(pos.coords.latitude, pos.coords.longitude).then(() => {
+                        if (subtitle) subtitle.textContent = 'Sorted by distance from your current location.';
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Sort by Distance from Me';
+                    });
+                },
+                () => {
+                    alert('Unable to get your location.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Sort by Distance from Me';
+                }
+            );
+        });
+    }
+    </script>
 </body>
 </html>

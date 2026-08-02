@@ -13,7 +13,7 @@ const router = express.Router();
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
-  const { name, email, password, role, address, city, org_type } = req.body;
+  const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -32,14 +32,12 @@ router.post('/register', async (req, res) => {
       [name, email, hashedPassword, role || 'donor']
     );
 
-    // If NGO, also insert into ngos table (approved=1 for demo)
-    if (role === 'ngo') {
-      const acceptedTypes = org_type || 'cooked,produce,packaged,bakery';
-      await pool.query(
-        'INSERT INTO ngos (user_id, name, latitude, longitude, capacity, accepted_types, approved) VALUES (?, ?, 0, 0, 100, ?, 1)',
-        [result.insertId, name, acceptedTypes]
-      );
-    }
+    // NOTE: NGO rows are created separately via POST /api/ngos/register
+    // (see ngo-register.html step C), which captures the real name/city/
+    // address/location/capacity/accepted_types and leaves the NGO pending
+    // admin approval. Do NOT auto-insert an NGO row here — doing so used to
+    // create a duplicate, auto-approved, (0,0)-located NGO alongside the
+    // real one submitted moments later in the same signup flow.
 
     return res.status(201).json({
       message: 'Account created successfully. Please log in.',

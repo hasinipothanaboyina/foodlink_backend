@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join as NGO | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    <style>
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .step.active { color: var(--primary); font-weight: 700; }
+        .step.done { color: #10b981; }
+        .step-num {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .step.active .step-num { background: var(--primary); color: white; }
+        .step.done .step-num { background: #10b981; color: white; }
+        .step-line { flex: 1; height: 2px; background: var(--border); }
+        .step.done ~ .step-line { background: #10b981; }
+        .error-msg {
+            color: #f43f5e;
+            font-size: 0.82rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+        .field-required { color: #f43f5e; }
+    </style>
+</head>
+<body>
+    <nav class="navbar glass" id="navbar">
+        <a href="index.html" class="logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
+        </a>
+        <div class="nav-links">
+            <button class="lang-toggle-btn" onclick="toggleLanguage()">తెలుగు</button>
+            <a href="auth.html" style="font-size:0.9rem; color:var(--text-muted);">
+                <i class="fa-solid fa-arrow-right"></i> Already registered? Login
+            </a>
+        </div>
+    </nav>
+
+    <div class="page-container reveal">
+        <div class="card">
+
+            <!-- Step indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1Indicator">
+                    <div class="step-num">1</div> NGO Details
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step2Indicator">
+                    <div class="step-num">2</div> Account Setup
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step3Indicator">
+                    <div class="step-num">3</div> Submitted
+                </div>
+            </div>
+
+            <h2 style="margin-bottom:0.5rem;" data-i18n="ngo_reg_title">Apply as NGO Partner</h2>
+            <p style="color:var(--text-muted); margin-bottom:2rem;" data-i18n="ngo_reg_subtitle">
+                Join the network to receive real-time surplus food alerts. Admin will verify your application.
+            </p>
+
+            <!-- Global error banner -->
+            <div id="globalError" style="display:none; background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.3); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem; color:#f43f5e; font-size:0.9rem;">
+                <i class="fa-solid fa-circle-exclamation"></i> <span id="globalErrorText"></span>
+            </div>
+
+            <!-- ── STEP 1: NGO Details ─────────────────────────────── -->
+            <div id="step1">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>NGO Name <span class="field-required">*</span></label>
+                        <input type="text" id="ngoName" class="form-control" placeholder="e.g. Hope Foundation" >
+                        <p class="error-msg" id="ngoNameErr">Please enter your NGO name.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>City <span class="field-required">*</span></label>
+                        <input type="text" id="ngoCity" class="form-control" placeholder="e.g. Vijayawada">
+                        <p class="error-msg" id="ngoCityErr">Please enter your city.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Full Address <span class="field-required">*</span></label>
+                    <input type="text" id="ngoAddress" class="form-control" placeholder="Full address for food deliveries">
+                    <p class="error-msg" id="ngoAddressErr">Please enter your full address.</p>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>Daily Capacity (Meals) <span class="field-required">*</span></label>
+                        <input type="number" id="ngoCapacity" class="form-control" min="10" placeholder="e.g. 200">
+                        <p class="error-msg" id="ngoCapacityErr">Please enter your daily meal capacity.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Phone <span class="field-required">*</span></label>
+                        <input type="tel" id="ngoPhone" class="form-control" placeholder="For logistics coordination">
+                        <p class="error-msg" id="ngoPhoneErr">Please enter a contact phone number.</p>
+                    </div>
+                </div>
+
+                <!-- Location detection -->
+                <div class="form-group">
+                    <label>NGO Location <span class="field-required">*</span></label>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                        This is used by the AI to match nearby food donors to your NGO.
+                    </p>
+                    <button type="button" id="ngoLocateBtn" class="btn btn-outline" style="width:100%; justify-content:center;">
+                        <i class="fa-solid fa-location-crosshairs"></i> Detect My NGO Location
+                    </button>
+                    <p id="ngoLocationStatus" style="font-size:0.82rem; margin-top:0.5rem; color:var(--text-muted); text-align:center;"></p>
+                    <p class="error-msg" id="ngoLocationErr">Please detect your location so donors can be matched to you.</p>
+                    <input type="hidden" id="ngoLat" value="">
+                    <input type="hidden" id="ngoLng" value="">
+                </div>
+
+                <!-- Verification document -->
+                <div class="form-group" style="margin-top:1rem;">
+                    <label>Registration Certificate / ID Proof (Optional)</label>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                        Upload your NGO registration certificate, 80G certificate, or an authorized ID proof. This
+                        lets our admin team verify your NGO is genuine before approval. JPG, PNG, or PDF, max 5MB.
+                    </p>
+                    <input type="file" id="ngoDocument" class="form-control" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                    <p class="error-msg" id="ngoDocumentErr">Please upload a verification document.</p>
+                </div>
+
+                <!-- Food types -->
+                <div class="form-group" style="margin-top:1rem;">
+                    <label>Food Types Accepted <span class="field-required">*</span></label>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.75rem;">Select all that your NGO can handle.</p>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                            <input type="checkbox" id="typeCooked" checked> Cooked Meals
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                            <input type="checkbox" id="typeProduce" checked> Fresh Produce
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                            <input type="checkbox" id="typePackaged" checked> Packaged Goods
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                            <input type="checkbox" id="typeBakery" checked> Bakery / Bread
+                        </label>
+                    </div>
+                    <p class="error-msg" id="ngoTypesErr">Please select at least one food type.</p>
+                </div>
+
+                <div style="margin-top:2.5rem;">
+                    <button type="button" id="nextToStep2Btn" class="btn btn-primary" style="width:100%; justify-content:center; font-size:1rem; padding:1rem;">
+                        Next: Create Account <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── STEP 2: Account Setup ───────────────────────────── -->
+            <div id="step2" style="display:none;">
+                <p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.9rem;">
+                    <i class="fa-solid fa-circle-info" style="color:var(--primary);"></i>
+                    Create a login so you can manage your NGO dashboard and view incoming donations.
+                </p>
+
+                <div class="form-group">
+                    <label>Your Name (Contact Person) <span class="field-required">*</span></label>
+                    <input type="text" id="regName" class="form-control" placeholder="Your full name">
+                    <p class="error-msg" id="regNameErr">Please enter your name.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address <span class="field-required">*</span></label>
+                    <input type="email" id="regEmail" class="form-control" placeholder="Used for login">
+                    <p class="error-msg" id="regEmailErr">Please enter a valid email address.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Password <span class="field-required">*</span></label>
+                    <input type="password" id="regPassword" class="form-control" placeholder="At least 6 characters">
+                    <p class="error-msg" id="regPasswordErr">Password must be at least 6 characters.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password <span class="field-required">*</span></label>
+                    <input type="password" id="regConfirm" class="form-control" placeholder="Re-enter password">
+                    <p class="error-msg" id="regConfirmErr">Passwords do not match.</p>
+                </div>
+
+                <div style="display:flex; gap:1rem; margin-top:2rem;">
+                    <button type="button" id="backToStep1Btn" class="btn btn-outline" style="flex:1; justify-content:center;">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
+                    <button type="button" id="submitNgoBtn" class="btn btn-primary" style="flex:2; justify-content:center; font-size:1rem; padding:1rem;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span data-i18n="btn_submit_ngo">Submit Application</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── STEP 3: Success ────────────────────────────────── -->
+            <div id="step3" style="display:none; text-align:center; padding:2rem 0;">
+                <i class="fa-solid fa-circle-check" style="font-size:4rem; color:#10b981; margin-bottom:1.5rem;"></i>
+                <h2 style="margin-bottom:1rem;">Application Submitted!</h2>
+                <p style="color:var(--text-muted); margin-bottom:2rem; max-width:400px; margin-left:auto; margin-right:auto;">
+                    Your NGO has been registered and is pending admin approval.
+                    Once approved, you'll start receiving food donation alerts.
+                </p>
+                <div style="background:rgba(45,90,74,0.05); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; max-width:380px; margin:0 auto 2rem; text-align:left;">
+                    <p style="font-size:0.9rem; font-weight:600; margin-bottom:0.5rem; color:var(--primary);">What happens next?</p>
+                    <ul style="color:var(--text-muted); font-size:0.87rem; padding-left:1.2rem; line-height:1.8;">
+                        <li>Admin reviews your application</li>
+                        <li>Once approved, your NGO appears on the platform</li>
+                        <li>Donors near you get matched to your NGO automatically</li>
+                    </ul>
+                </div>
+                <a href="auth.html" class="btn btn-primary" style="margin-right:1rem;">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Dashboard
+                </a>
+                <a href="index.html" class="btn btn-outline">Return Home</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // API_BASE is already declared globally by script.js — redeclaring it
+        // here with `const` used to throw "Identifier 'API_BASE' has already
+        // been declared", which silently killed this whole script block and
+        // every button on this page (Next, Back, Submit, Detect Location).
+
+        // Stored NGO location coords
+        let ngoCoords = { lat: null, lng: null };
+
+        // ── Location detection ────────────────────────────────────
+        document.getElementById('ngoLocateBtn').addEventListener('click', () => {
+            const btn = document.getElementById('ngoLocateBtn');
+            const status = document.getElementById('ngoLocationStatus');
+
+            if (!navigator.geolocation) {
+                status.textContent = 'Geolocation not supported. Please enter coordinates manually.';
+                status.style.color = '#f43f5e';
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Detecting...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    ngoCoords.lat = pos.coords.latitude;
+                    ngoCoords.lng = pos.coords.longitude;
+                    document.getElementById('ngoLat').value = ngoCoords.lat;
+                    document.getElementById('ngoLng').value = ngoCoords.lng;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Location Detected!';
+                    btn.classList.replace('btn-outline', 'btn-primary');
+                    btn.disabled = false;
+                    status.textContent = `Lat: ${ngoCoords.lat.toFixed(4)}, Lng: ${ngoCoords.lng.toFixed(4)}`;
+                    status.style.color = '#10b981';
+                    hideError('ngoLocationErr');
+                },
+                () => {
+                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Detect My NGO Location';
+                    btn.disabled = false;
+                    status.textContent = 'Could not detect. Using Vijayawada as default.';
+                    status.style.color = '#f59e0b';
+                    // Use Vijayawada as fallback
+                    ngoCoords = { lat: 16.5062, lng: 80.6480 };
+                    document.getElementById('ngoLat').value = ngoCoords.lat;
+                    document.getElementById('ngoLng').value = ngoCoords.lng;
+                }
+            );
+        });
+
+        // ── Validation helpers ────────────────────────────────────
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = msg || el.textContent; el.style.display = 'block'; }
+        }
+        function hideError(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+        function showGlobalError(msg) {
+            document.getElementById('globalErrorText').textContent = msg;
+            document.getElementById('globalError').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function hideGlobalError() {
+            document.getElementById('globalError').style.display = 'none';
+        }
+
+        // ── Step 1 validation ─────────────────────────────────────
+        function validateStep1() {
+            let valid = true;
+            hideGlobalError();
+
+            if (!document.getElementById('ngoName').value.trim()) {
+                showError('ngoNameErr'); valid = false;
+            } else hideError('ngoNameErr');
+
+            if (!document.getElementById('ngoCity').value.trim()) {
+                showError('ngoCityErr'); valid = false;
+            } else hideError('ngoCityErr');
+
+            if (!document.getElementById('ngoAddress').value.trim()) {
+                showError('ngoAddressErr'); valid = false;
+            } else hideError('ngoAddressErr');
+
+            const capacity = parseInt(document.getElementById('ngoCapacity').value);
+            if (!capacity || capacity < 10) {
+                showError('ngoCapacityErr', 'Capacity must be at least 10 meals.'); valid = false;
+            } else hideError('ngoCapacityErr');
+
+            if (!document.getElementById('ngoPhone').value.trim()) {
+                showError('ngoPhoneErr'); valid = false;
+            } else hideError('ngoPhoneErr');
+
+            const docFile = document.getElementById('ngoDocument').files[0];
+            if (docFile && docFile.size > 5 * 1024 * 1024) {
+                showError('ngoDocumentErr', 'File is too large. Max size is 5MB.'); valid = false;
+            } else hideError('ngoDocumentErr');
+
+            if (!ngoCoords.lat || !ngoCoords.lng) {
+                showError('ngoLocationErr'); valid = false;
+            } else hideError('ngoLocationErr');
+
+            const types = getSelectedTypes();
+            if (types.length === 0) {
+                showError('ngoTypesErr'); valid = false;
+            } else hideError('ngoTypesErr');
+
+            return valid;
+        }
+
+        function getSelectedTypes() {
+            const types = [];
+            if (document.getElementById('typeCooked').checked) types.push('cooked');
+            if (document.getElementById('typeProduce').checked) types.push('produce');
+            if (document.getElementById('typePackaged').checked) types.push('packaged');
+            if (document.getElementById('typeBakery').checked) types.push('bakery');
+            return types;
+        }
+
+        // ── Step navigation ───────────────────────────────────────
+        document.getElementById('nextToStep2Btn').addEventListener('click', () => {
+            if (!validateStep1()) return;
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('step1Indicator').className = 'step done';
+            document.getElementById('step1Indicator').querySelector('.step-num').textContent = '✓';
+            document.getElementById('step2Indicator').className = 'step active';
+        });
+
+        document.getElementById('backToStep1Btn').addEventListener('click', () => {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2Indicator').className = 'step';
+            document.getElementById('step1Indicator').className = 'step active';
+            document.getElementById('step1Indicator').querySelector('.step-num').textContent = '1';
+        });
+
+        // ── Step 2 validation ─────────────────────────────────────
+        function validateStep2() {
+            let valid = true;
+
+            if (!document.getElementById('regName').value.trim()) {
+                showError('regNameErr'); valid = false;
+            } else hideError('regNameErr');
+
+            const email = document.getElementById('regEmail').value.trim();
+            if (!email || !email.includes('@')) {
+                showError('regEmailErr'); valid = false;
+            } else hideError('regEmailErr');
+
+            const password = document.getElementById('regPassword').value;
+            if (!password || password.length < 6) {
+                showError('regPasswordErr'); valid = false;
+            } else hideError('regPasswordErr');
+
+            const confirm = document.getElementById('regConfirm').value;
+            if (password !== confirm) {
+                showError('regConfirmErr'); valid = false;
+            } else hideError('regConfirmErr');
+
+            return valid;
+        }
+
+        // ── Final Submit ──────────────────────────────────────────
+        document.getElementById('submitNgoBtn').addEventListener('click', async () => {
+            if (!validateStep2()) return;
+
+            const submitBtn = document.getElementById('submitNgoBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+            hideGlobalError();
+
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                // Step A: Register user account
+                const authRes = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role: 'ngo' })
+                });
+                const authData = await authRes.json();
+
+                if (!authRes.ok) {
+                    showGlobalError(authData.message || 'Registration failed. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+                    return;
+                }
+
+                // Step B: Login to get token
+                const loginRes = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const loginData = await loginRes.json();
+
+                if (!loginRes.ok || !loginData.token) {
+                    showGlobalError('Account created but login failed. Please login manually.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+                    return;
+                }
+
+                // Step C: Register NGO details (multipart — includes the uploaded document)
+                const ngoFormData = new FormData();
+                ngoFormData.append('name', document.getElementById('ngoName').value.trim());
+                ngoFormData.append('city', document.getElementById('ngoCity').value.trim());
+                ngoFormData.append('address', document.getElementById('ngoAddress').value.trim());
+                ngoFormData.append('latitude', document.getElementById('ngoLat').value);
+                ngoFormData.append('longitude', document.getElementById('ngoLng').value);
+                ngoFormData.append('capacity', document.getElementById('ngoCapacity').value);
+                ngoFormData.append('accepted_types', getSelectedTypes().join(','));
+                ngoFormData.append('phone', document.getElementById('ngoPhone').value.trim());
+                const docFile = document.getElementById('ngoDocument').files[0];
+                if (docFile) ngoFormData.append('document', docFile);
+
+                const ngoRes = await fetch(`${API_BASE}/ngos/register`, {
+                    method: 'POST',
+                    headers: {
+                        // NOTE: do NOT set Content-Type here — the browser sets the
+                        // correct multipart boundary automatically for FormData.
+                        'Authorization': `Bearer ${loginData.token}`
+                    },
+                    body: ngoFormData
+                });
+                const ngoData = await ngoRes.json();
+
+                if (!ngoRes.ok) {
+                    showGlobalError(ngoData.message || 'NGO details could not be saved. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+                    return;
+                }
+
+                // Save token for later login
+                localStorage.setItem('foodlink_token', loginData.token);
+                localStorage.setItem('foodlink_user', JSON.stringify(loginData.user));
+
+                // Show success step
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                document.getElementById('step2Indicator').className = 'step done';
+                document.getElementById('step2Indicator').querySelector('.step-num').textContent = '✓';
+                document.getElementById('step3Indicator').className = 'step active';
+
+            } catch (err) {
+                console.error(err);
+                showGlobalError('Cannot connect to server. Please make sure the backend is running.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+            }
+        });
+
+        // Scroll reveal
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => document.querySelector('.reveal')?.classList.add('active'), 100);
+        });
+    </script>
+</body>
+</html>

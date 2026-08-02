@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track My Donations | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    <style>
+        .track-hero {
+            padding: 8rem 5% 3rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .status-timeline {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0 0.5rem;
+            flex-wrap: wrap;
+        }
+        .status-step {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status-step.done { color: #10b981; font-weight: 600; }
+        .status-step.active { color: var(--secondary); font-weight: 700; }
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+        .status-step.done .status-dot { background: #10b981; }
+        .status-step.active .status-dot { background: var(--secondary); }
+        .status-line {
+            flex: 1; height: 2px;
+            background: var(--border);
+            min-width: 20px;
+        }
+        .donation-track-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        .donation-track-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--secondary);
+        }
+        .donation-id-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(45,90,74,0.08);
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+        }
+        .phone-lookup-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--border);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar glass" id="navbar">
+        <a href="index.html" class="logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="font-size:0.9rem; color:var(--text-muted);">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <div class="track-hero">
+        <h2 style="margin-bottom:0.5rem;">Track My Donations</h2>
+        <p style="color:var(--text-muted); margin-bottom:2rem;">
+            Enter your phone number to see all your past and ongoing donations.
+        </p>
+
+        <!-- Phone lookup box -->
+        <div class="phone-lookup-box reveal" id="lookupBox">
+            <div class="form-group">
+                <label style="font-size:1rem;">Your Phone Number</label>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.75rem;">
+                    Use the same number you entered when donating.
+                </p>
+                <div style="display:flex; gap:1rem;">
+                    <input type="tel" id="phoneInput" class="form-control"
+                        placeholder="e.g. 9876543210" maxlength="15">
+                    <button id="trackBtn" class="btn btn-primary" style="white-space:nowrap;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                </div>
+                <p id="lookupError" style="color:#f43f5e; font-size:0.85rem; margin-top:0.5rem; display:none;"></p>
+            </div>
+
+            <!-- Quick load from localStorage -->
+            <div id="localDonationsHint" style="display:none; margin-top:1rem; padding:1rem; background:rgba(45,90,74,0.05); border-radius:var(--radius-md); border:1px solid var(--border);">
+                <p style="font-size:0.85rem; color:var(--text-muted);">
+                    <i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i>
+                    We found <strong id="localCount">0</strong> donation(s) saved on this device.
+                    <a href="#" id="loadLocalBtn" style="color:var(--primary); font-weight:600; margin-left:0.5rem;">Load them instantly</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Results section -->
+        <div id="resultsSection" style="display:none; margin-top:2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 id="resultsTitle" style="color:var(--primary);"></h3>
+                <button id="newSearchBtn" class="btn btn-outline" style="padding:0.5rem 1rem; font-size:0.85rem;">
+                    <i class="fa-solid fa-arrow-left"></i> New Search
+                </button>
+            </div>
+            <div id="donationsList"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // API_BASE is already declared globally by script.js — redeclaring it
+        // here with `const` used to throw "Identifier 'API_BASE' has already
+        // been declared", which silently killed this whole script block and
+        // every button on this page (Track, New Search, etc.).
+
+        const phoneInput = document.getElementById('phoneInput');
+        const trackBtn = document.getElementById('trackBtn');
+        const lookupError = document.getElementById('lookupError');
+        const resultsSection = document.getElementById('resultsSection');
+        const lookupBox = document.getElementById('lookupBox');
+        const donationsList = document.getElementById('donationsList');
+        const resultsTitle = document.getElementById('resultsTitle');
+
+        // Status steps for timeline
+        const statusSteps = ['pending', 'matched', 'in_transit', 'completed'];
+        const statusLabels = {
+            pending: 'Submitted',
+            matched: 'NGO Matched',
+            in_transit: 'In Transit',
+            completed: 'Delivered',
+            cancelled: 'Cancelled'
+        };
+        const statusIcons = {
+            pending: 'fa-clock',
+            matched: 'fa-handshake',
+            in_transit: 'fa-truck',
+            completed: 'fa-circle-check',
+            cancelled: 'fa-ban'
+        };
+
+        function buildTimeline(currentStatus) {
+            if (currentStatus === 'cancelled') {
+                return `<div style="color:#f43f5e; font-size:0.85rem; font-weight:600;">
+                    <i class="fa-solid fa-ban"></i> Donation Cancelled
+                </div>`;
+            }
+
+            const currentIdx = statusSteps.indexOf(currentStatus);
+            let html = '<div class="status-timeline">';
+
+            statusSteps.forEach((step, i) => {
+                const isDone = i < currentIdx;
+                const isActive = i === currentIdx;
+                const cls = isDone ? 'done' : (isActive ? 'active' : '');
+
+                html += `<div class="status-step ${cls}">
+                    <div class="status-dot"></div>
+                    <span>${statusLabels[step]}</span>
+                </div>`;
+
+                if (i < statusSteps.length - 1) {
+                    html += `<div class="status-line" style="${isDone ? 'background:#10b981;' : ''}"></div>`;
+                }
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderDonations(donations) {
+            if (!donations || donations.length === 0) {
+                donationsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-box-open"></i>
+                        <h3>No donations found</h3>
+                        <p>We couldn't find any donations linked to this number.</p>
+                        <a href="donate.html" class="btn btn-primary" style="margin-top:1rem;">
+                            <i class="fa-solid fa-plus"></i> Make a Donation
+                        </a>
+                    </div>`;
+                return;
+            }
+
+            donationsList.innerHTML = donations.map(d => {
+                const date = new Date(d.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                const icon = statusIcons[d.status] || 'fa-clock';
+                const isDropoff = d.delivery_method === 'donor_delivers';
+
+                const mapUrl = d.ngo_name
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.ngo_name + ' ' + (d.ngo_address || ''))}`
+                    : '#';
+
+                return `
+                <div class="donation-track-card reveal">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+                        <div>
+                            <span class="donation-id-badge">#FL-${d.id}</span>
+                            <span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;">${date}</span>
+                        </div>
+                        <i class="fa-solid ${icon}" style="color:${d.status === 'completed' ? '#10b981' : d.status === 'cancelled' ? '#f43f5e' : 'var(--secondary)'}; font-size:1.2rem;"></i>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.9rem; margin-bottom:1rem;">
+                        <div>
+                            <span style="color:var(--text-muted);">Food:</span>
+                            <strong> ${d.quantity} portions of ${d.food_type}</strong>
+                        </div>
+                        <div>
+                            <span style="color:var(--text-muted);">Delivery:</span>
+                            <strong> ${isDropoff ? 'You drop off' : 'NGO picks up'}</strong>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <span style="color:var(--text-muted);">Matched NGO:</span>
+                            <strong> ${d.ngo_name || 'Finding match...'}</strong>
+                            ${d.distance_km != null ? `<span style="color:var(--primary); font-size:0.8rem;"> (${Number(d.distance_km).toFixed(1)} km)</span>` : ''}
+                        </div>
+                    </div>
+
+                    ${buildTimeline(d.status)}
+
+                    ${d.ngo_name && d.status !== 'cancelled' ? `
+                    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; gap:0.75rem; flex-wrap:wrap;">
+                        <a href="${mapUrl}" target="_blank" class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.8rem;">
+                            <i class="fa-solid fa-location-arrow"></i>
+                            ${isDropoff ? 'Get Directions to NGO' : 'View NGO on Map'}
+                        </a>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+
+            // Animate reveals
+            document.querySelectorAll('.donation-track-card.reveal').forEach((el, i) => {
+                setTimeout(() => el.classList.add('active'), i * 80);
+            });
+        }
+
+        async function fetchDonations(phone) {
+            trackBtn.disabled = true;
+            trackBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Searching...';
+            lookupError.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/donations/track?phone=${encodeURIComponent(phone)}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    lookupError.textContent = data.message || 'Something went wrong. Please try again.';
+                    lookupError.style.display = 'block';
+                    return;
+                }
+
+                lookupBox.style.display = 'none';
+                resultsSection.style.display = 'block';
+                resultsTitle.textContent = `${data.donations.length} Donation(s) found for ${phone}`;
+                renderDonations(data.donations);
+
+            } catch (err) {
+                lookupError.textContent = 'Cannot connect to server. Make sure your backend is running.';
+                lookupError.style.display = 'block';
+            } finally {
+                trackBtn.disabled = false;
+                trackBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Search';
+            }
+        }
+
+        // Check localStorage for saved donations on this device
+        function checkLocalDonations() {
+            const saved = JSON.parse(localStorage.getItem('foodlink_my_donations') || '[]');
+            if (saved.length > 0) {
+                document.getElementById('localDonationsHint').style.display = 'block';
+                document.getElementById('localCount').textContent = saved.length;
+
+                document.getElementById('loadLocalBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const phone = saved[0].phone;
+                    phoneInput.value = phone;
+                    fetchDonations(phone);
+                });
+            }
+        }
+
+        trackBtn.addEventListener('click', () => {
+            const phone = phoneInput.value.trim();
+            if (!phone || phone.length < 10) {
+                lookupError.textContent = 'Please enter a valid phone number (at least 10 digits).';
+                lookupError.style.display = 'block';
+                return;
+            }
+            fetchDonations(phone);
+        });
+
+        phoneInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') trackBtn.click();
+        });
+
+        document.getElementById('newSearchBtn').addEventListener('click', () => {
+            resultsSection.style.display = 'none';
+            lookupBox.style.display = 'block';
+            phoneInput.value = '';
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLocalDonations();
+            // Reveal animation
+            setTimeout(() => {
+                document.querySelector('.reveal')?.classList.add('active');
+            }, 100);
+        });
+    </script>
+</body>
+</html>

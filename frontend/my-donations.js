@@ -8,6 +8,31 @@ let currentPage = 1;
 let currentStatus = 'all';
 const PAGE_SIZE = 10;
 
+function openDonationModal(id) {
+  const modalBody = document.getElementById('donationModalBody');
+  const modalOverlay = document.getElementById('donationModalOverlay');
+  if (modalBody && modalOverlay) {
+    const donation = window.latestDonations.find(d => d.id === id);
+    if (donation) {
+      const isDropoff = donation.delivery_method === 'donor_delivers';
+      const mapQuery = isDropoff 
+        ? encodeURIComponent((donation.ngo_name || '') + ' ' + (donation.ngo_address || ''))
+        : encodeURIComponent(donation.address || '');
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+      
+      modalBody.innerHTML = `
+        <p><strong>Status:</strong> ${donation.status.replace('_', ' ')}</p>
+        <p><strong>Food:</strong> ${donation.quantity}x ${donation.food_type}</p>
+        <p><strong>NGO:</strong> ${donation.ngo_name || 'Pending Match'}</p>
+        <p><strong>Distance:</strong> ${donation.distance_km != null ? Number(donation.distance_km).toFixed(1) + ' km' : '—'}</p>
+        <p><strong>Delivery:</strong> ${isDropoff ? 'You will drop off' : 'NGO will pick up'}</p>
+        <a href="${mapUrl}" target="_blank" class="btn btn-outline" style="margin-top: 1rem; display: inline-flex; width: 100%; justify-content: center;"><i class="fa-solid fa-location-arrow"></i> Get Directions</a>
+      `;
+      modalOverlay.style.display = 'flex';
+    }
+  }
+}
+
 async function loadDonationsPage(page = 1, status = 'all') {
   const tbody = document.getElementById('allDonationsTableBody');
   const summary = document.getElementById('resultsSummary');
@@ -39,7 +64,7 @@ async function loadDonationsPage(page = 1, status = 'all') {
       <tr>
         <td>#FL-${d.id}</td>
         <td>${d.quantity}x ${d.food_type}</td>
-        <td><strong>${d.ngo_name || 'Finding match...'}</strong></td>
+        <td><strong>${d.ngo_name || (d.status === 'pending' ? 'No NGOs available' : 'Finding match...')}</strong></td>
         <td>${d.distance_km != null ? Number(d.distance_km).toFixed(1) + ' km' : '—'}</td>
         <td><span class="badge ${statusBadge[d.status] || 'badge-pending'}">${d.status.replace('_', ' ')}</span></td>
         <td>${new Date(d.created_at).toLocaleDateString()}</td>
@@ -106,8 +131,22 @@ function renderPagination(pagination) {
   });
 }
 
+async function loadImpactStats() {
+  try {
+    const data = await apiCall('/donations/my-impact');
+    if (data.impact) {
+      document.getElementById('impactMeals').textContent = data.impact.totalMeals.toLocaleString();
+      document.getElementById('impactTotal').textContent = data.impact.totalDonations.toLocaleString();
+      document.getElementById('impactCO2').textContent = data.impact.co2Saved.toLocaleString();
+    }
+  } catch(err) {
+    console.error('Could not load impact stats', err);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadDonationsPage(currentPage, currentStatus);
+  loadImpactStats();
 
   const statusFilter = document.getElementById('statusFilter');
   if (statusFilter) {
@@ -124,6 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
     closeModalBtn.addEventListener('click', () => { modalOverlay.style.display = 'none'; });
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) modalOverlay.style.display = 'none';
+    });
+  }
+
+  const donorLogoutBtn = document.getElementById('donorLogoutBtn');
+  if (donorLogoutBtn) {
+    donorLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('foodlink_token');
+      localStorage.removeItem('foodlink_user');
+      window.location.href = 'index.html';
     });
   }
 });

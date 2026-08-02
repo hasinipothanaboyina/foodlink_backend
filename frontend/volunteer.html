@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Portal | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .volunteer-hero {
+            background: linear-gradient(135deg, rgba(232,112,74,0.1), rgba(45,90,74,0.1));
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: var(--radius-lg);
+            margin-bottom: 3rem;
+        }
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .job-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s;
+        }
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .urgent-job {
+            border-left: 4px solid #f43f5e;
+            background: rgba(244,63,94,0.02);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar glass">
+        <a href="index.html" class="logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+            FoodLink Volunteer
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="btn btn-outline">Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="page-container reveal" style="max-width: 900px; margin: 2rem auto;">
+        
+        <div class="volunteer-hero">
+            <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--text-main);">Become a Food Rescue Runner</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                Help us bridge the final gap! NGOs often lack the transport to pick up food late at night. Sign up to get alerts for pickups near you.
+            </p>
+            
+            <div id="authSection" style="margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="document.getElementById('signupForm').style.display='block'; this.style.display='none';">
+                    <i class="fa-solid fa-person-running"></i> Register as Volunteer
+                </button>
+            </div>
+
+            <form id="signupForm" style="display:none; max-width: 400px; margin: 2rem auto; text-align: left; background: white; padding: 2rem; border-radius: var(--radius-md); box-shadow: var(--shadow-md);">
+                <h3 style="margin-bottom: 1.5rem; text-align:center;">Volunteer Registration</h3>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label>Full Name</label>
+                    <input type="text" id="vName" class="form-control" required>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label>Phone Number (WhatsApp)</label>
+                    <input type="tel" id="vPhone" class="form-control" required>
+                </div>
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label>City</label>
+                    <input type="text" id="vCity" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Sign Up</button>
+            </form>
+        </div>
+
+        <!-- Dashboard Section (Simulated) -->
+        <div id="volunteerDashboard" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap:wrap; gap: 1rem;">
+                <div>
+                    <h2>Hello, <span id="vDashboardName">Runner</span>!</h2>
+                    <p style="color: var(--text-muted);">Thank you for being on call.</p>
+                </div>
+                <div class="status-toggle">
+                    <span style="font-weight: 500;">Your Status:</span>
+                    <select class="form-control" style="width: auto; padding: 0.4rem 1rem;">
+                        <option value="available">🟢 Available for Runs</option>
+                        <option value="busy">🟡 Busy</option>
+                        <option value="offline">🔴 Offline</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Active Pickup Requests Near You</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Accept a request to coordinate the delivery between Donor and NGO.</p>
+
+            <!-- Mock Requests -->
+            <div class="job-card urgent-job">
+                <div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="background: rgba(244,63,94,0.1); color: #f43f5e; padding: 0.2rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;"><i class="fa-solid fa-fire"></i> URGENT</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">1.2 km away</span>
+                    </div>
+                    <h4 style="margin-bottom: 0.3rem;">Pickup from: City Bakery</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.3rem;"><i class="fa-solid fa-arrow-right" style="color:var(--primary);"></i> Deliver to: Ashray NGO</p>
+                    <p style="font-size: 0.85rem; font-weight:500;"><i class="fa-solid fa-box"></i> 50x Bakery items</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="alert('Request Accepted! Directions sent to WhatsApp.')">Accept Run</button>
+                </div>
+            </div>
+
+            <div class="job-card">
+                <div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">3.5 km away</span>
+                    </div>
+                    <h4 style="margin-bottom: 0.3rem;">Pickup from: Royal Function Hall</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.3rem;"><i class="fa-solid fa-arrow-right" style="color:var(--primary);"></i> Deliver to: Helping Hands</p>
+                    <p style="font-size: 0.85rem; font-weight:500;"><i class="fa-solid fa-bowl-food"></i> 100x Cooked Meals</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="alert('Request Accepted! Directions sent to WhatsApp.')">Accept Run</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('vName').value;
+            // Simulate API call
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'none';
+            document.querySelector('.volunteer-hero').style.display = 'none';
+            
+            document.getElementById('volunteerDashboard').style.display = 'block';
+            document.getElementById('vDashboardName').textContent = name;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+step 2 traverse the each stack using pop and compare with seRCH KEY and in this process of searching the no of element per each stack is unknown 
+basics installation and setup
+crod operations subquery languages
+dml dbl dql
+clauses and agrigations
+subqueries and filters
+joints 
+views
+
+
+DATA TYPES::
+
+INTEGER - short/int
+NUMERIC-ling/double
+REAL - fLOAT
+
+table constraints
+not null
+auto increment
+default - 0 false none
+uniques key- no duplicates
+primary key-[uq+nn] primary reference of table
+             primary reference of table 
+             for a table only one primary key is allowed
+6. forigen key-[uq+nn]
+	SECONDARY REFERENCE
+	there may be n no of forigen keys are acceptable
+7. check-conditional

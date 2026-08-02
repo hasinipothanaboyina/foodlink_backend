@@ -3,381 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | FoodLink AI</title>
+    <title>NGO & Admin Login | FoodLink AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; min-height: 100vh; background: #0a0a0a; }
-
-        .bg-image {
-            position: fixed;
-            inset: 0;
-            background-image: url('https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1600');
-            background-size: cover;
-            background-position: center;
-            filter: blur(6px) brightness(0.4);
-            transform: scale(1.05);
-            z-index: 0;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 10;
-            padding: 1rem 2rem;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo { color: #4ade80; text-decoration: none; font-size: 1.3rem; font-weight: 700; }
-        .logo i { margin-right: 0.4rem; }
-
         .auth-container {
-            position: relative;
-            z-index: 1;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 5rem 1rem 2rem;
+            padding: 6rem 5% 4rem;
         }
-
-        .auth-card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
-
-        .auth-card h2 { color: #fff; margin: 0 0 0.3rem; font-size: 1.7rem; font-weight: 700; }
-        .auth-card .subtitle { color: rgba(255,255,255,0.55); margin: 0 0 1.5rem; font-size: 0.95rem; }
-
-        .tab-row {
-            display: flex;
-            margin-bottom: 1.8rem;
-            background: rgba(255,255,255,0.07);
-            border-radius: 10px;
-            padding: 4px;
-        }
-
-        .tab-btn {
-            flex: 1; padding: 0.6rem;
-            background: none; border: none;
-            border-radius: 8px; font-size: 0.95rem;
-            font-weight: 600; cursor: pointer;
-            color: rgba(255,255,255,0.45);
-            transition: all 0.2s;
-        }
-        .tab-btn.active { background: #16a34a; color: #fff; }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-group label {
-            display: block; color: rgba(255,255,255,0.8);
-            font-size: 0.875rem; font-weight: 500; margin-bottom: 0.4rem;
-        }
-
-        .form-control {
-            width: 100%; padding: 0.75rem 1rem;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px; color: #fff;
-            font-size: 0.95rem; box-sizing: border-box;
-            transition: border 0.2s;
-        }
-        .form-control:focus { outline: none; border-color: #16a34a; background: rgba(255,255,255,0.15); }
-        .form-control::placeholder { color: rgba(255,255,255,0.3); }
-        .form-control option { background: #1a1a1a; color: #fff; }
-
-        .password-wrapper { position: relative; }
-        .password-wrapper .form-control { padding-right: 2.8rem; }
-        .toggle-pw {
-            position: absolute; right: 0.9rem; top: 50%;
-            transform: translateY(-50%);
-            background: none; border: none;
-            color: rgba(255,255,255,0.4); cursor: pointer; font-size: 0.95rem; padding: 0;
-        }
-        .toggle-pw:hover { color: rgba(255,255,255,0.8); }
-
-        .role-selector {
-            display: flex; gap: 0.75rem; margin-bottom: 1.2rem;
-        }
-        .role-card {
-            flex: 1; padding: 1rem 0.5rem;
-            background: rgba(255,255,255,0.07);
-            border: 2px solid rgba(255,255,255,0.15);
-            border-radius: 12px; text-align: center;
-            cursor: pointer; transition: all 0.2s;
-            color: rgba(255,255,255,0.6);
-        }
-        .role-card:hover { border-color: rgba(255,255,255,0.35); }
-        .role-card.selected { border-color: #16a34a; background: rgba(22,163,74,0.15); color: #fff; }
-        .role-card i { font-size: 1.5rem; display: block; margin-bottom: 0.4rem; }
-        .role-card span { font-size: 0.85rem; font-weight: 600; }
-
-        .section-divider {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin: 1.2rem 0 0.8rem;
-            display: flex; align-items: center; gap: 0.75rem;
-        }
-        .section-divider::before, .section-divider::after {
-            content: ''; flex: 1;
-            height: 1px; background: rgba(255,255,255,0.15);
-        }
-
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-
-        .btn-primary {
-            width: 100%; padding: 0.85rem;
-            background: #16a34a; color: #fff;
-            border: none; border-radius: 10px;
-            font-size: 1rem; font-weight: 600;
-            cursor: pointer; margin-top: 0.75rem;
-            transition: background 0.2s;
-        }
-        .btn-primary:hover { background: #15803d; }
-
-        .remember-row {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 1.2rem; font-size: 0.875rem;
-        }
-        .remember-row label {
-            display: flex; align-items: center;
-            gap: 0.5rem; color: rgba(255,255,255,0.6); font-weight: 400; cursor: pointer;
-        }
-        .remember-row a, .auth-footer a { color: #4ade80; text-decoration: none; font-weight: 600; }
-
-        .auth-footer { text-align: center; margin-top: 1.2rem; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
     </style>
 </head>
 <body>
-    <div class="bg-image"></div>
-
-    <nav class="navbar">
-        <a href="index.html" class="logo"><i class="fa-solid fa-leaf"></i> FoodLink</a>
+    <nav class="navbar glass" id="navbar">
+        <a href="index.html" class="logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="font-size:0.9rem; color:var(--text-muted);">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
     </nav>
 
     <div class="auth-container">
-        <div class="auth-card">
+        <div class="card reveal" style="width:100%; max-width:400px; text-align:center;">
+            <i class="fa-solid fa-lock" style="font-size:2rem; color:var(--primary); margin-bottom:1rem;"></i>
+            <h2 style="margin-bottom:0.5rem;">NGO & Admin Login</h2>
+            <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.95rem;">
+                Sign in to manage your organisation and monitor donations.
+            </p>
 
-            <div class="tab-row">
-                <button class="tab-btn active" id="loginTab" onclick="showTab('login')">Sign In</button>
-                <button class="tab-btn" id="registerTab" onclick="showTab('register')">Create Account</button>
+            <!-- Error banner -->
+            <div id="loginError" style="display:none; background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.3); border-radius:var(--radius-md); padding:0.75rem 1rem; margin-bottom:1.5rem; color:#f43f5e; font-size:0.87rem; text-align:left;">
+                <i class="fa-solid fa-circle-exclamation"></i> <span id="loginErrorText"></span>
             </div>
 
-            <!-- LOGIN FORM -->
-            <div id="loginSection">
-                <h2>Welcome Back</h2>
-                <p class="subtitle">Sign in to continue your impact</p>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
-                            <button type="button" class="toggle-pw" onclick="togglePw('password',this)"><i class="fa-solid fa-eye"></i></button>
-                        </div>
-                    </div>
-                    <div class="remember-row">
-                        <label><input type="checkbox"> Remember me</label>
-                        <a href="#">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="btn-primary">Sign In &nbsp;<i class="fa-solid fa-arrow-right"></i></button>
-                </form>
-                <div class="auth-footer">
-                    <p>Don't have an account? <a href="#" onclick="showTab('register')">Create Account</a></p>
+            <div style="text-align:left;">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="your@email.com" required>
                 </div>
-            </div>
 
-            <!-- REGISTER FORM -->
-            <div id="registerSection" style="display:none;">
-                <h2>Create Account</h2>
-                <p class="subtitle">Choose your account type to get started</p>
-
-                <!-- Role Selector -->
-                <div class="role-selector">
-                    <div class="role-card selected" id="roleDonor" onclick="selectRole('donor')">
-                        <i class="fa-solid fa-hand-holding-heart"></i>
-                        <span>Food Donor</span>
-                    </div>
-                    <div class="role-card" id="roleNgo" onclick="selectRole('ngo')">
-                        <i class="fa-solid fa-building-ngo"></i>
-                        <span>NGO / Org</span>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position:relative;">
+                        <input type="password" id="password" class="form-control"
+                            placeholder="••••••••" required style="padding-right:3rem;">
+                        <button type="button" id="togglePassword"
+                            style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.9rem;">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                     </div>
                 </div>
 
-                <form id="registerForm">
-                    <input type="hidden" id="regRole" value="donor">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; font-size:0.85rem;">
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; margin:0; cursor:pointer;">
+                        <input type="checkbox" id="rememberMe"> Remember me
+                    </label>
+                    <a href="forgot-password.html" style="color:var(--primary); text-decoration:none; font-weight:500;">
+                        Forgot Password?
+                    </a>
+                </div>
 
-                    <!-- DONOR FIELDS -->
-                    <div id="donorFields">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="regName" class="form-control" placeholder="Your full name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
-                                <button type="button" class="toggle-pw" onclick="togglePw('regPassword',this)"><i class="fa-solid fa-eye"></i></button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Confirm Password</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="regConfirm" class="form-control" placeholder="••••••••" required>
-                                <button type="button" class="toggle-pw" onclick="togglePw('regConfirm',this)"><i class="fa-solid fa-eye"></i></button>
-                            </div>
-                        </div>
-                    </div>
+                <button id="loginBtn" class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom:1rem; padding:1rem;">
+                    Sign In <i class="fa-solid fa-arrow-right"></i>
+                </button>
 
-                    <!-- NGO FIELDS -->
-                    <div id="ngoFields" style="display:none;">
-                        <div class="section-divider">Organization Info</div>
-                        <div class="form-group">
-                            <label>Organization Name</label>
-                            <input type="text" id="ngoName" class="form-control" placeholder="e.g. Hope Foundation">
-                        </div>
-                        <div class="two-col">
-                            <div class="form-group">
-                                <label>City</label>
-                                <input type="text" id="ngoCity" class="form-control" placeholder="City">
-                            </div>
-                            <div class="form-group">
-                                <label>Members Count</label>
-                                <input type="number" id="ngoMembers" class="form-control" placeholder="e.g. 25" min="1">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Full Address</label>
-                            <input type="text" id="ngoAddress" class="form-control" placeholder="Street, Area, City">
-                        </div>
-                        <div class="form-group">
-                            <label>Organization Type</label>
-                            <select id="ngoType" class="form-control">
-                                <option value="food_bank">Food Bank</option>
-                                <option value="shelter">Shelter / Relief Center</option>
-                                <option value="orphanage">Orphanage</option>
-                                <option value="old_age_home">Old Age Home</option>
-                                <option value="community_kitchen">Community Kitchen</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <div class="section-divider">Login Credentials</div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="ngoEmail" class="form-control" placeholder="org@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="ngoPassword" class="form-control" placeholder="••••••••">
-                                <button type="button" class="toggle-pw" onclick="togglePw('ngoPassword',this)"><i class="fa-solid fa-eye"></i></button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Confirm Password</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="ngoConfirm" class="form-control" placeholder="••••••••">
-                                <button type="button" class="toggle-pw" onclick="togglePw('ngoConfirm',this)"><i class="fa-solid fa-eye"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Create Account &nbsp;<i class="fa-solid fa-arrow-right"></i></button>
-                </form>
-                <div class="auth-footer">
-                    <p>Already have an account? <a href="#" onclick="showTab('login')">Sign In</a></p>
+                <div style="text-align:center; font-size:0.9rem; color:var(--text-muted);">
+                    Don't have an account?
+                    <a href="ngo-register.html" style="color:var(--primary); text-decoration:none; font-weight:600;">
+                        Register NGO
+                    </a>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script src="script.js"></script>
     <script>
-        function showTab(tab) {
-            const isLogin = tab === 'login';
-            document.getElementById('loginSection').style.display = isLogin ? 'block' : 'none';
-            document.getElementById('registerSection').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('loginTab').className = 'tab-btn' + (isLogin ? ' active' : '');
-            document.getElementById('registerTab').className = 'tab-btn' + (!isLogin ? ' active' : '');
-        }
 
-        function selectRole(role) {
-            document.getElementById('regRole').value = role;
-            document.getElementById('roleDonor').className = 'role-card' + (role === 'donor' ? ' selected' : '');
-            document.getElementById('roleNgo').className = 'role-card' + (role === 'ngo' ? ' selected' : '');
-            document.getElementById('donorFields').style.display = role === 'donor' ? 'block' : 'none';
-            document.getElementById('ngoFields').style.display = role === 'ngo' ? 'block' : 'none';
-        }
-
-        function togglePw(id, btn) {
-            const input = document.getElementById(id);
-            const isText = input.type === 'text';
-            input.type = isText ? 'password' : 'text';
-            btn.innerHTML = isText ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
-        }
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const role = document.getElementById('regRole').value;
-
-            let name, email, password, confirm, extraData = {};
-
-            if (role === 'donor') {
-                name = document.getElementById('regName').value;
-                email = document.getElementById('regEmail').value;
-                password = document.getElementById('regPassword').value;
-                confirm = document.getElementById('regConfirm').value;
+        // Password show/hide
+        document.getElementById('togglePassword').addEventListener('click', () => {
+            const input = document.getElementById('password');
+            const icon = document.querySelector('#togglePassword i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
             } else {
-                name = document.getElementById('ngoName').value;
-                email = document.getElementById('ngoEmail').value;
-                password = document.getElementById('ngoPassword').value;
-                confirm = document.getElementById('ngoConfirm').value;
-                extraData = {
-                    address: document.getElementById('ngoAddress').value,
-                    city: document.getElementById('ngoCity').value,
-                    members: document.getElementById('ngoMembers').value,
-                    org_type: document.getElementById('ngoType').value,
-                };
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        });
+
+        // Login submit
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email    = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            const errorText = document.getElementById('loginErrorText');
+            const btn      = document.getElementById('loginBtn');
+
+            errorDiv.style.display = 'none';
+
+            if (!email || !password) {
+                errorText.textContent = 'Please enter both email and password.';
+                errorDiv.style.display = 'block';
+                return;
             }
 
-            if (password !== confirm) { alert('Passwords do not match!'); return; }
-            if (password.length < 6) { alert('Password must be at least 6 characters!'); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
 
             try {
-                const res = await fetch(`${API_BASE.replace('/api', '')}/api/auth/register`, {
+                const res  = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, role, ...extraData })
+                    body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
-                if (res.ok) {
-                    alert('Account created successfully! Please sign in.');
-                    showTab('login');
+
+                if (res.ok && data.token) {
+                    localStorage.setItem('foodlink_token', data.token);
+                    localStorage.setItem('foodlink_user', JSON.stringify(data.user));
+
+                    // Redirect based on role
+                    if (data.user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else if (data.user.role === 'ngo') {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        window.location.href = 'my-donations.html';
+                    }
                 } else {
-                    alert(data.message || 'Registration failed.');
+                    errorText.textContent = data.message || 'Invalid email or password.';
+                    errorDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = 'Sign In <i class="fa-solid fa-arrow-right"></i>';
                 }
             } catch (err) {
-                alert('Cannot connect to server.');
+                errorText.textContent = 'Cannot connect to server. Make sure your backend is running.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Sign In <i class="fa-solid fa-arrow-right"></i>';
             }
+        });
+
+        // Enter key support
+        document.getElementById('password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+
+        // Reveal animation
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => document.querySelector('.reveal')?.classList.add('active'), 100);
         });
     </script>
 </body>

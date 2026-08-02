@@ -4,7 +4,9 @@
  */
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const API_BASE = 'https://foodlink-ai-1-ii16.onrender.com/api'; // Your backend URL
+const API_BASE = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:5000/api' 
+  : '/api'; // Your backend URL
 
 // Helper to get the JWT token stored after login
 function getToken() {
@@ -16,18 +18,68 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   const options = {
     method,
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,
     },
   };
-  if (body) options.body = JSON.stringify(body);
+  
+  if (body) {
+    if (body instanceof FormData) {
+      options.body = body;
+    } else {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+  }
 
   const res = await fetch(`${API_BASE}${endpoint}`, options);
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || `HTTP error! status: ${res.status}`);
+  }
+  return data;
 }
 
 // ─── ON PAGE LOAD ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Global Disaster Relief Mode Check
+  async function checkDisasterMode() {
+    try {
+      const res = await fetch(`${API_BASE}/system-status`);
+      const data = await res.json();
+      if (data.disaster_mode) {
+        document.body.style.borderTop = '8px solid #f43f5e';
+        let banner = document.getElementById('disasterBanner');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.id = 'disasterBanner';
+          banner.innerHTML = `<strong>🚨 EMERGENCY DISASTER RELIEF MODE ACTIVE 🚨</strong> All regular food donations are paused. Please funnel bulk rations and water to emergency camps immediately.`;
+          banner.style.cssText = 'background: #f43f5e; color: white; text-align: center; padding: 12px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999; animation: flash 2s infinite;';
+          document.body.appendChild(banner);
+          
+          const style = document.createElement('style');
+          style.innerHTML = `@keyframes flash { 0%, 100% { background: #f43f5e; } 50% { background: #be123c; } }`;
+          document.head.appendChild(style);
+
+          // Push navbar down
+          const nav = document.querySelector('.navbar');
+          if (nav) nav.style.top = '45px';
+        }
+      }
+    } catch (e) {}
+  }
+  checkDisasterMode();
+  setInterval(checkDisasterMode, 30000); // Check every 30s
+
+  // ── Reveal Animations ────────────────────────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
   // ── Mobile Navigation Toggle ─────────────────────────────────────────────
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -67,11 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('foodlink_user', JSON.stringify(data.user));
           alert(`Welcome back, ${data.user.name}!`);
           window.location.href = 'dashboard.html';
-        } else {
-          alert(data.message || 'Login failed. Check your credentials.');
         }
       } catch (err) {
-        alert('Cannot connect to server. Make sure your backend is running on port 5000.');
+        alert(err.message || 'Cannot connect to server.');
       }
     });
   }
@@ -127,39 +177,48 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       loadingOverlay.style.display = 'flex';
 
-      const donationData = {
-        food_type: document.getElementById('foodType').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        pickup_by: document.getElementById('expiryTime').value,
-        address: document.getElementById('address').value,
-        description: document.getElementById('description').value,
-        latitude: window.donationCoords.lat,
-        longitude: window.donationCoords.lng,
-      };
+      const donationData = new FormData();
+      donationData.append('name', document.getElementById('donorName').value.trim());
+      donationData.append('phone', document.getElementById('donorPhone').value.trim());
+      donationData.append('food_type', document.getElementById('foodType').value);
+      donationData.append('quantity', document.getElementById('quantity').value);
+      donationData.append('pickup_by', document.getElementById('expiryTime').value);
+      donationData.append('city', document.getElementById('city').value);
+      donationData.append('address', `${document.getElementById('doorNo').value}, ${document.getElementById('address').value}`.trim());
+      donationData.append('delivery_method', document.getElementById('deliveryMethod') ? document.getElementById('deliveryMethod').value : 'donor_delivers');
+      
+      const fileInput = document.getElementById('foodImage');
+      if (fileInput && fileInput.files[0]) {
+        donationData.append('food_image', fileInput.files[0]);
+      }
+
+      if (window.donationCoords) {
+        donationData.append('latitude', window.donationCoords.lat);
+        donationData.append('longitude', window.donationCoords.lng);
+      }
 
       try {
-        const data = await apiCall('/donations', 'POST', donationData);
+        const token = getToken();
+        const endpoint = token ? '/donations' : '/donations/public';
+        const data = await apiCall(endpoint, 'POST', donationData);
 
         if (data.donationId) {
           const ngoInfo = data.matchedNGO
-            ? `<strong>${data.matchedNGO.name}</strong> (${data.matchedNGO.distance} away)`
-            : 'We are finding the best NGO for you shortly.';
+            ? `Your donation will be picked up by <strong>${data.matchedNGO.name}</strong> (${data.matchedNGO.distance} away).`
+            : '<span style="color: #f43f5e;"><i class="fa-solid fa-triangle-exclamation"></i> All nearby NGOs are currently full or unavailable.</span><br>We have saved your donation and will notify you if an NGO becomes available.';
 
           loadingOverlay.innerHTML = `
             <i class="fa-solid fa-circle-check" style="font-size:4rem;color:var(--primary);margin-bottom:1rem;"></i>
-            <h2 style="margin-bottom:0.5rem;">${data.matchedNGO ? 'Match Found!' : 'Donation Submitted!'}</h2>
-            <p style="color:var(--text-muted);">Your donation will be picked up by ${ngoInfo}.</p>
+            <h2 style="margin-bottom:0.5rem;">${data.matchedNGO ? 'Match Found!' : 'Donation Saved'}</h2>
+            <p style="color:var(--text-muted);">${ngoInfo}</p>
             <button onclick="window.location.href='dashboard.html'" class="btn btn-primary" style="margin-top:1.5rem;">
               Go to Dashboard
             </button>
           `;
-        } else {
-          loadingOverlay.style.display = 'none';
-          alert(data.message || 'Failed to submit donation. Please login first.');
         }
       } catch (err) {
         loadingOverlay.style.display = 'none';
-        alert('Cannot connect to server. Is the backend running?');
+        alert(err.message || 'Cannot connect to server. Is the backend running?');
       }
     });
   }
@@ -210,6 +269,68 @@ document.addEventListener('DOMContentLoaded', () => {
         ${user.name}
       `;
     }
+  }
+
+  // ── OTP LOGIN (index.html) ────────────────────────────────────────────────
+  const openTrackBtn = document.getElementById('openTrackModalBtn');
+  const otpModal = document.getElementById('otpModalOverlay');
+  const closeOtp = document.getElementById('closeOtpModal');
+  const reqOtpBtn = document.getElementById('requestOtpBtn');
+  const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+
+  if (openTrackBtn && otpModal) {
+    openTrackBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      otpModal.style.display = 'flex';
+    });
+    
+    closeOtp.addEventListener('click', () => {
+      otpModal.style.display = 'none';
+    });
+    
+    otpModal.addEventListener('click', (e) => {
+      if (e.target === otpModal) otpModal.style.display = 'none';
+    });
+
+    reqOtpBtn.addEventListener('click', async () => {
+      const phone = document.getElementById('otpPhoneInput').value;
+      if (!phone) return alert('Enter phone number');
+      
+      reqOtpBtn.disabled = true;
+      reqOtpBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+      
+      try {
+        const res = await apiCall('/donor-auth/request-otp', 'POST', { phone });
+        document.getElementById('otpStep1').style.display = 'none';
+        document.getElementById('otpStep2').style.display = 'block';
+      } catch (err) {
+        alert(err.message || 'Cannot connect to server.');
+      }
+      reqOtpBtn.disabled = false;
+      reqOtpBtn.innerHTML = 'Send OTP';
+    });
+
+    verifyOtpBtn.addEventListener('click', async () => {
+      const phone = document.getElementById('otpPhoneInput').value;
+      const otp = document.getElementById('otpCodeInput').value;
+      if (!otp) return alert('Enter OTP');
+      
+      verifyOtpBtn.disabled = true;
+      verifyOtpBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+      
+      try {
+        const res = await apiCall('/donor-auth/verify-otp', 'POST', { phone, otp });
+        if (res.token) {
+          localStorage.setItem('foodlink_token', res.token);
+          localStorage.setItem('foodlink_user', JSON.stringify(res.user));
+          window.location.href = 'my-donations.html';
+        }
+      } catch (err) {
+        alert(err.message || 'Cannot connect to server.');
+      }
+      verifyOtpBtn.disabled = false;
+      verifyOtpBtn.innerHTML = 'Verify & Login';
+    });
   }
 });
 

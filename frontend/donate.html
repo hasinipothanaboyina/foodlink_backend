@@ -6,76 +6,441 @@
     <title>Donate Food | FoodLink AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
 </head>
-<body style="background: var(--background);">
-    <nav class="navbar glass">
+<body>
+    <nav class="navbar glass" id="navbar">
         <a href="index.html" class="logo">
-            <i class="fa-solid fa-leaf"></i> FoodLink
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
         </a>
         <div class="nav-links">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="auth.html" class="btn btn-outline" style="padding: 0.5rem 1rem;">Sign Out</a>
+            <button class="lang-toggle-btn" onclick="toggleLanguage()">తెలుగు</button>
+            <a href="#" id="openTrackModalBtn" style="font-size:0.9rem; color:var(--text-muted);">
+                <i class="fa-solid fa-clock-rotate-left"></i> Track My Donations
+            </a>
         </div>
     </nav>
-    <div class="form-container">
-        <div class="auth-card wide">
-            <div class="auth-header">
-                <h2>Register a Donation</h2>
-                <p style="color: var(--text-muted);">Fill in the details below. Our AI will automatically match you with the nearest NGO in need.</p>
-            </div>
+
+    <div class="page-container reveal">
+        <div class="card">
+            <h2 style="margin-bottom: 0.5rem;" data-i18n="don_title">Donate Surplus Food</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2.5rem;" data-i18n="don_subtitle">Our AI will instantly match your food with the nearest verified NGO. No account needed.</p>
             
             <form id="donationForm">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
-                        <label for="foodType">Food Category</label>
+                        <label data-i18n="don_name">Your Name / Organization</label>
+                        <input type="text" id="donorName" class="form-control" placeholder="e.g. City Bakery" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="don_phone">Contact Number <span style="color:#f43f5e;">*</span></label>
+                        <input type="tel" id="donorPhone" class="form-control" placeholder="For pickup coordination & tracking" required>
+                        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:0.3rem;">
+                            <i class="fa-solid fa-circle-info"></i> Save this number to track your donation later.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label data-i18n="don_type">Food Type</label>
                         <select id="foodType" class="form-control" required>
-                            <option value="">Select Category</option>
+                            <option value="">Select type...</option>
                             <option value="cooked">Cooked Meals</option>
                             <option value="produce">Fresh Produce</option>
                             <option value="packaged">Packaged Goods</option>
                             <option value="bakery">Bakery / Bread</option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
-                        <label for="quantity">Quantity (Approx. Meals)</label>
-                        <input type="number" id="quantity" class="form-control" min="1" placeholder="e.g. 50" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="expiryTime">Must be picked up by</label>
-                        <input type="datetime-local" id="expiryTime" class="form-control" required>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="description">Additional Details</label>
-                        <textarea id="description" class="form-control" rows="3" placeholder="Dietary info, storage requirements, etc."></textarea>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Pickup Location</label>
-                        <div style="display: flex; gap: 1rem;">
-                            <input type="text" id="address" class="form-control" placeholder="Detecting your location..." readonly required>
-                            <button type="button" id="getLocationBtn" class="btn btn-outline" style="white-space: nowrap;">
-                                <i class="fa-solid fa-location-crosshairs"></i> Locate Me
-                            </button>
-                        </div>
-                        <div id="mapPlaceholder" class="map-placeholder" style="display: none;">
-                            <i class="fa-solid fa-map-location-dot" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                            Map Preview (Location Acquired)
-                        </div>
+                        <label data-i18n="don_qty">Quantity (Approx. Meals)</label>
+                        <input type="number" id="quantity" class="form-control" min="1" required>
                     </div>
                 </div>
-                <div style="margin-top: 2rem; text-align: right;">
-                    <button type="submit" class="btn btn-primary" id="submitDonationBtn">
-                        <i class="fa-solid fa-paper-plane"></i> Submit Donation
+
+                <div class="form-group">
+                    <label data-i18n="don_expiry">Must be picked up/delivered by</label>
+                    <input type="datetime-local" id="expiryTime" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload Food Photo (Optional) <span style="font-size:0.8rem; color:var(--primary); font-weight:600;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Quality Check</span></label>
+                    <input type="file" id="foodImage" class="form-control" accept="image/*">
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-top:0.3rem;">
+                        Our AI scans the image to estimate freshness and assigns an Urgency Priority.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="don_location">Location</label>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <select id="city" class="form-control" required style="flex: 1;">
+                            <option value="">Select your city...</option>
+                            <option value="Vijayawada">Vijayawada</option>
+                            <option value="Guntur">Guntur</option>
+                            <option value="Visakhapatnam">Visakhapatnam</option>
+                            <option value="Tirupati">Tirupati</option>
+                            <option value="Kurnool">Kurnool</option>
+                            <option value="Nellore">Nellore</option>
+                            <option value="Kakinada">Kakinada</option>
+                            <option value="Rajahmundry">Rajahmundry</option>
+                            <option value="Eluru">Eluru</option>
+                            <option value="Kadapa">Kadapa</option>
+                            <option value="Anantapur">Anantapur</option>
+                            <option value="Ongole">Ongole</option>
+                            <option value="Gudivada">Gudivada</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="text" id="address" class="form-control" placeholder="Street Address (Click 'Locate Me')" required>
+                        <button type="button" id="getLocationBtn" class="btn btn-outline" style="white-space: nowrap;">
+                            <i class="fa-solid fa-location-crosshairs"></i> Locate Me
+                        </button>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <input type="text" id="doorNo" class="form-control" placeholder="Door No / Flat / Landmark (e.g. Next to Apollo Pharmacy)">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label style="margin-bottom: 1rem;" data-i18n="don_delivery">How will the food reach the NGO?</label>
+                    <div class="radio-card-grid">
+                        <label class="radio-card">
+                            <input type="radio" name="deliveryMethod" value="donor_delivers" checked>
+                            <div class="radio-content">
+                                <i class="fa-solid fa-car"></i>
+                                <strong data-i18n="del_dropoff">I will drop it off</strong>
+                                <span data-i18n="del_dropoff_desc">Show me where to go. Fastest option.</span>
+                            </div>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="deliveryMethod" value="ngo_pickup">
+                            <div class="radio-content">
+                                <i class="fa-solid fa-truck"></i>
+                                <strong data-i18n="del_pickup">NGO must pick it up</strong>
+                                <span data-i18n="del_pickup_desc">I need someone to come get it.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; text-align: center;">
+                    <button type="submit" class="btn btn-primary" id="submitDonationBtn" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 1rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span data-i18n="don_submit">Find Match & Submit</span>
                     </button>
                 </div>
             </form>
+
+            <!-- Success State -->
+            <div id="matchResult" style="display: none; text-align: center; padding: 2rem 0;">
+                <i class="fa-solid fa-circle-check" style="font-size: 4rem; color: #10b981; margin-bottom: 1.5rem;"></i>
+                <h2 style="margin-bottom: 1rem;" data-i18n="res_title">Match Found!</h2>
+                <p id="matchDesc" style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;"></p>
+                
+                <div style="background: rgba(45, 90, 74, 0.05); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; text-align: left; max-width: 400px; margin: 0 auto 1.5rem;">
+                    <h4 style="margin-bottom: 1rem;">NGO Details:</h4>
+                    <p><strong id="resNgoName">...</strong></p>
+                    <p style="color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> <span id="resNgoDist"></span> away</p>
+                    <p style="margin-top: 1rem; font-weight: 500;" id="resInstruction"></p>
+                </div>
+
+                <!-- Track Donation CTA -->
+                <div style="background: rgba(232,112,74,0.07); border: 1px solid rgba(232,112,74,0.25); border-radius: var(--radius-md); padding: 1rem 1.5rem; max-width: 400px; margin: 0 auto 2rem; text-align:left;">
+                    <p style="font-size:0.9rem; color:var(--text-main); margin-bottom:0.5rem;">
+                        <i class="fa-solid fa-bookmark" style="color:var(--secondary);"></i>
+                        <strong> Your donation has been saved!</strong>
+                    </p>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                        Come back anytime to track its status using your phone number.
+                    </p>
+                    <a href="#" class="btn btn-secondary" onclick="document.getElementById('openTrackModalBtn').click(); return false;" style="padding:0.5rem 1rem; font-size:0.85rem;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Track My Donations
+                    </a>
+                </div>
+
+                <a href="index.html" class="btn btn-outline">Return Home</a>
+            </div>
         </div>
     </div>
-    <!-- Loading Overlay for Submit -->
-    <div id="loadingOverlay" style="display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; flex-direction: column;">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; inset: 0; background: rgba(251, 247, 240, 0.9); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; flex-direction: column;">
         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-        <h3>AI is matching your donation...</h3>
+        <h3 data-i18n="don_matching">AI is analyzing nearby capacity...</h3>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Donor OTP Login Modal -->
+    <div id="otpModalOverlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 3000;">
+        <div class="glass" style="padding: 2rem; border-radius: var(--radius); width: 90%; max-width: 400px; position: relative; background: white;">
+            <button id="closeOtpModal" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-times"></i></button>
+            <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-mobile-screen"></i> Track Donations</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter your phone number to view your past and ongoing donations.</p>
+            
+            <div id="otpStep1">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Phone Number</label>
+                    <input type="text" id="otpPhoneInput" class="form-control" placeholder="e.g. 9876543210" required>
+                </div>
+                <button id="requestOtpBtn" class="btn btn-primary" style="width: 100%;">Send OTP</button>
+            </div>
+
+            <div id="otpStep2" style="display: none;">
+                <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--primary);">OTP sent! (Use 1234 for demo)</p>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Enter 4-digit OTP</label>
+                    <input type="text" id="otpCodeInput" class="form-control" placeholder="1234" required>
+                </div>
+                <button id="verifyOtpBtn" class="btn btn-primary" style="width: 100%;">Verify & Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script>
+        const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+
+        // Save donation to localStorage so donor can track it later
+        function saveDonationLocally(donationId, phone) {
+            const existing = JSON.parse(localStorage.getItem('foodlink_my_donations') || '[]');
+            // Avoid duplicates
+            if (!existing.find(d => d.id === donationId)) {
+                existing.unshift({ id: donationId, phone, savedAt: new Date().toISOString() });
+                // Keep only last 20
+                if (existing.length > 20) existing.pop();
+                localStorage.setItem('foodlink_my_donations', JSON.stringify(existing));
+            }
+        }
+
+        // Geolocation
+        window.donationCoords = { lat: null, lng: null };
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const addressInput = document.getElementById('address');
+
+        if (getLocationBtn && addressInput) {
+            getLocationBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    alert('Geolocation not supported by your browser.');
+                    return;
+                }
+                getLocationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        window.donationCoords = { lat: latitude, lng: longitude };
+                        
+                        // Fetch human-readable address from OpenStreetMap (Nominatim)
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                addressInput.value = data.display_name || `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+                                addressInput.removeAttribute('readonly');
+                                getLocationBtn.innerHTML = '<i class="fa-solid fa-check"></i> Found';
+                                getLocationBtn.classList.replace('btn-outline', 'btn-primary');
+                            })
+                            .catch(err => {
+                                // Fallback
+                                addressInput.value = `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+                                addressInput.removeAttribute('readonly');
+                                getLocationBtn.innerHTML = '<i class="fa-solid fa-check"></i> Found';
+                                getLocationBtn.classList.replace('btn-outline', 'btn-primary');
+                            });
+                    },
+                    () => {
+                        alert('Unable to get location. Please type your address manually.');
+                        getLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Locate Me';
+                        addressInput.removeAttribute('readonly');
+                        addressInput.focus();
+                    }
+                );
+            });
+        }
+
+        // Navbar scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // Reveal animation
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => document.querySelector('.reveal')?.classList.add('active'), 100);
+        });
+
+        // Donation form submit
+        const donationForm = document.getElementById('donationForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const matchResult = document.getElementById('matchResult');
+
+        if (donationForm && loadingOverlay) {
+            donationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                loadingOverlay.style.display = 'flex';
+
+                const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+                const donorName = document.getElementById('donorName').value;
+                const donorPhone = document.getElementById('donorPhone').value;
+                const baseAddress = document.getElementById('address').value;
+                const doorNo = document.getElementById('doorNo').value.trim();
+                
+                // Combine address like delivery apps
+                const finalAddress = doorNo ? `${doorNo}, ${baseAddress}` : baseAddress;
+
+                const donationData = {
+                    donor_name: donorName,
+                    donor_phone: donorPhone,
+                    food_type: document.getElementById('foodType').value,
+                    quantity: parseInt(document.getElementById('quantity').value),
+                    pickup_by: document.getElementById('expiryTime').value,
+                    address: finalAddress,
+                    city: document.getElementById('city').value,
+                    latitude: window.donationCoords.lat || 16.5062,
+                    longitude: window.donationCoords.lng || 80.6480,
+                    delivery_method: deliveryMethod,
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/donations/public`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(donationData)
+                    });
+                    const data = await res.json();
+
+                    loadingOverlay.style.display = 'none';
+
+                    if (res.ok && data.donationId) {
+                        // Save to localStorage for tracking
+                        saveDonationLocally(data.donationId, donorPhone);
+
+                        donationForm.style.display = 'none';
+                        matchResult.style.display = 'block';
+
+                        if (data.matchedNGO) {
+                            document.getElementById('resNgoName').textContent = data.matchedNGO.name;
+                            document.getElementById('resNgoDist').textContent = data.matchedNGO.distance + ' km';
+
+                            const isDropoff = deliveryMethod === 'donor_delivers';
+                            document.getElementById('matchDesc').textContent = isDropoff
+                                ? "We've alerted them you are on your way!"
+                                : "We've alerted them to pick it up!";
+
+                            // Use exact GPS coordinates for driving directions instead of a text search
+                            const mapUrl = (data.matchedNGO.latitude && data.matchedNGO.longitude)
+                                ? `https://www.google.com/maps/dir/?api=1&destination=${data.matchedNGO.latitude},${data.matchedNGO.longitude}`
+                                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.matchedNGO.name + ' ' + (data.matchedNGO.address || ''))}`;
+
+                            document.getElementById('resInstruction').innerHTML = isDropoff
+                                ? `<i class="fa-solid fa-map"></i> Deliver to:<br>
+                                   <span style="font-weight:400; color:var(--text-muted);">${data.matchedNGO.address || 'Address provided on contact'}</span><br>
+                                   <a href="${mapUrl}" target="_blank" class="btn btn-outline" style="margin-top:1rem; padding:0.5rem 1rem; display:inline-flex; font-size:0.85rem;">
+                                       <i class="fa-solid fa-location-arrow"></i> Get Directions
+                                   </a>`
+                                : `<i class="fa-solid fa-phone"></i> They will call you at <strong>${donorPhone}</strong> shortly.`;
+                        } else {
+                            document.getElementById('matchDesc').innerHTML = "<span style='color: #f43f5e;'><i class='fa-solid fa-triangle-exclamation'></i> No Immediate Match</span>";
+                            document.getElementById('resNgoName').textContent = "All Nearby NGOs are Full";
+                            document.getElementById('resNgoDist').textContent = "—";
+                            document.getElementById('resInstruction').textContent = "Currently, no NGOs have the capacity or accepted food types for your donation in this city. Your donation has been saved, and we will notify you if an NGO becomes available.";
+                        }
+                    } else {
+                        alert(data.message || 'Failed to submit donation.');
+                    }
+                } catch (err) {
+                    loadingOverlay.style.display = 'none';
+                    alert('Cannot connect to server. Please make sure the backend is running.');
+                    console.error(err);
+                }
+            });
+        }
+
+        // ── OTP LOGIN LOGIC ───────────────────────────────────────────────────────
+        const openTrackModalBtn = document.getElementById('openTrackModalBtn');
+        const otpModalOverlay = document.getElementById('otpModalOverlay');
+        const closeOtpModal = document.getElementById('closeOtpModal');
+        const requestOtpBtn = document.getElementById('requestOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        
+        if (openTrackModalBtn && otpModalOverlay) {
+            openTrackModalBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                otpModalOverlay.style.display = 'flex';
+            });
+            
+            closeOtpModal.addEventListener('click', () => {
+                otpModalOverlay.style.display = 'none';
+            });
+
+            let currentPhone = '';
+
+            requestOtpBtn.addEventListener('click', async () => {
+                const phoneInput = document.getElementById('otpPhoneInput').value;
+                if (!phoneInput || phoneInput.length < 10) {
+                    alert('Please enter a valid phone number');
+                    return;
+                }
+                
+                requestOtpBtn.disabled = true;
+                requestOtpBtn.textContent = 'Sending...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/donor-auth/request-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: phoneInput })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        currentPhone = phoneInput;
+                        document.getElementById('otpStep1').style.display = 'none';
+                        document.getElementById('otpStep2').style.display = 'block';
+                    } else {
+                        alert(data.message || 'Failed to send OTP.');
+                    }
+                } catch (err) {
+                    alert('Failed to send OTP.');
+                } finally {
+                    requestOtpBtn.disabled = false;
+                    requestOtpBtn.textContent = 'Send OTP';
+                }
+            });
+
+            verifyOtpBtn.addEventListener('click', async () => {
+                const otpCode = document.getElementById('otpCodeInput').value;
+                if (!otpCode) return;
+                
+                verifyOtpBtn.disabled = true;
+                verifyOtpBtn.textContent = 'Verifying...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/donor-auth/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: currentPhone, otp: otpCode })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.token) {
+                        localStorage.setItem('foodlink_token', data.token);
+                        localStorage.setItem('foodlink_user', JSON.stringify(data.user));
+                        window.location.href = 'my-donations.html';
+                    } else {
+                        alert(data.message || 'Invalid OTP');
+                    }
+                } catch (err) {
+                    alert('Failed to verify OTP.');
+                } finally {
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.textContent = 'Verify & Login';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

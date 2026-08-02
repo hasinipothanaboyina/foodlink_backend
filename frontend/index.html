@@ -3,97 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodLink AI | Eradicating Food Waste</title>
-    <meta name="description" content="AI-powered platform connecting surplus food with NGOs to reduce waste and fight hunger.">
+    <title>FoodLink AI | Eradicating Food Waste in Andhra Pradesh</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar glass">
+    <nav class="navbar glass" id="navbar">
         <a href="index.html" class="logo">
-            <i class="fa-solid fa-leaf"></i> FoodLink AI
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
         </a>
-        <div class="nav-links" id="navLinks">
-            <a href="index.html">Home</a>
-            <a href="#features">Features</a>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="donate.html" class="btn btn-primary">Donate Food</a>
-            <a href="auth.html" class="btn btn-outline">Login</a>
-        </div>
-        <div class="mobile-menu-toggle" id="mobileMenuBtn">
-            <i class="fa-solid fa-bars"></i>
+        <div class="nav-links">
+            <button class="lang-toggle-btn" onclick="toggleLanguage()">తెలుగు</button>
+            <a href="#" id="openTrackModalBtn" style="font-size: 0.85rem; color: var(--primary); margin-right: 1rem;"><i class="fa-solid fa-truck-fast"></i> Track Donations</a>
+            <a href="auth.html" style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-lock"></i> Admin / NGO Login</a>
         </div>
     </nav>
-    <!-- Hero Section -->
+
     <header class="hero">
-        <div class="hero-content">
-            <div class="hero-tagline"><i class="fa-solid fa-robot"></i> AI-Powered Distribution</div>
-            <h1>Share Surplus.<br><span>End Hunger.</span></h1>
-            <p>Join our intelligent network that connects food donors with NGOs in real-time, ensuring perfectly good food reaches those who need it most, not the landfill.</p>
-            <div class="hero-actions">
-                <a href="donate.html" class="btn btn-primary"><i class="fa-solid fa-box-open"></i> Start Donating</a>
-                <a href="auth.html" class="btn btn-outline">Join as NGO</a>
-            </div>
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content reveal">
+            <h1 data-i18n="hero_title">Share Food.<br>End Hunger.</h1>
+            <p data-i18n="hero_desc">Join our intelligent network that connects food donors with local NGOs instantly. Zero friction, zero waste, just perfectly good food reaching those who need it most in Andhra Pradesh.</p>
         </div>
-        <div class="hero-image"></div>
+        
+        <!-- Bouncing Scroll Indicator -->
+        <div class="scroll-indicator" onclick="window.scrollBy({top: window.innerHeight * 0.8, behavior: 'smooth'})">
+            <i class="fa-solid fa-chevron-down"></i>
+        </div>
     </header>
-    <!-- Stats Section -->
-    <section class="stats">
-        <div class="stat-item">
-            <h3>50K+</h3>
-            <p>Meals Rescued</p>
-        </div>
-        <div class="stat-item">
-            <h3>120+</h3>
-            <p>Partner NGOs</p>
-        </div>
-        <div class="stat-item">
-            <h3>15 Tons</h3>
-            <p>CO2 Prevented</p>
-        </div>
-        <div class="stat-item">
-            <h3>100%</h3>
-            <p>AI Matched</p>
-        </div>
-    </section>
-    <!-- Features Section -->
-    <section id="features">
-        <div class="section-header">
-            <h2>How FoodLink AI Works</h2>
-            <p>Our platform uses advanced algorithms to make food donation seamless, efficient, and impactful.</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
-                <h3>Smart Matching</h3>
-                <p>Our AI instantly pairs your donation with the nearest NGO that has the capacity and specific need for your food items.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-location-dot"></i></div>
-                <h3>Location Services</h3>
-                <p>Built-in geolocation ensures optimized routing for pickup, reducing transit times and preserving food freshness.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
-                <h3>Real-time Analytics</h3>
-                <p>Track your environmental and social impact with a comprehensive dashboard showing exactly where your food goes.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
-                <h3>Instant Alerts</h3>
-                <p>Get push notifications when your donation is matched, picked up, and safely delivered to the community.</p>
-            </div>
+
+    <section class="choice-section">
+        <div class="choice-grid">
+            <a href="donate.html" class="choice-card reveal">
+                <div class="choice-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <h2 data-i18n="choice_donor">I have food to donate</h2>
+                <p style="color: var(--text-muted);" data-i18n="choice_donor_desc">Instantly match with the nearest NGO that needs your surplus. No account required.</p>
+                <div class="btn btn-primary" style="margin-top: 1rem;" data-i18n="btn_donate">Donate Now <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+            
+            <a href="ngo-register.html" class="choice-card reveal" style="transition-delay: 0.2s;">
+                <div class="choice-icon" style="color: var(--secondary); background: rgba(232, 112, 74, 0.05);"><i class="fa-solid fa-building-ngo"></i></div>
+                <h2 data-i18n="choice_ngo">I represent an NGO</h2>
+                <p style="color: var(--text-muted);" data-i18n="choice_ngo_desc">Register your capacity and receive real-time alerts when food is available near you.</p>
+                <div class="btn btn-outline" style="margin-top: 1rem;" data-i18n="btn_join">Join Network <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
         </div>
     </section>
-    <!-- Footer -->
-    <footer style="background: var(--surface); padding: 4rem 5%; border-top: 1px solid var(--border); text-align: center;">
-        <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
-            <i class="fa-solid fa-leaf"></i> FoodLink AI
-        </div>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Revolutionizing food rescue through artificial intelligence.</p>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">&copy; 2026 FoodLink AI. All rights reserved.</p>
+
+    <footer style="padding: 4rem 5%; text-align: center; border-top: 1px solid var(--border); margin-top: 4rem;">
+        <p style="color: var(--text-muted);">&copy; 2026 FoodLink AI. Serving Andhra Pradesh.</p>
     </footer>
+
+    <!-- Donor OTP Login Modal -->
+    <div id="otpModalOverlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="glass" style="padding: 2rem; border-radius: var(--radius); width: 90%; max-width: 400px; position: relative;">
+            <button id="closeOtpModal" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-times"></i></button>
+            <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-mobile-screen"></i> Track Donations</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter your phone number to view your past and ongoing donations.</p>
+            
+            <div id="otpStep1">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Phone Number</label>
+                    <input type="text" id="otpPhoneInput" class="form-control" placeholder="e.g. 9876543210" required>
+                </div>
+                <button id="requestOtpBtn" class="btn btn-primary" style="width: 100%;">Send OTP</button>
+            </div>
+
+            <div id="otpStep2" style="display: none;">
+                <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--primary);">OTP sent! (Use 1234 for demo)</p>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Enter 4-digit OTP</label>
+                    <input type="text" id="otpCodeInput" class="form-control" placeholder="1234" required>
+                </div>
+                <button id="verifyOtpBtn" class="btn btn-primary" style="width: 100%;">Verify & Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
