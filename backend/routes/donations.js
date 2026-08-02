@@ -429,7 +429,7 @@ router.get('/ngo-incoming', authMiddleware, async (req, res) => {
 });
 
 // --- NGO COMPLETE DONATION ---
-router.patch('/:id/complete', verifyToken, async (req, res) => {
+router.patch('/:id/complete', authMiddleware, async (req, res) => {
   if (req.user.role !== 'ngo') return res.status(403).json({ message: 'Only NGOs can complete donations.' });
   try {
     const donationId = req.params.id;
