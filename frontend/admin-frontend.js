@@ -4,10 +4,10 @@
  * from the backend admin API. Requires an admin-role JWT token.
  */
 
-const ADMIN_API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+const ADMIN_API_BASE = 'https://foodlink-backend-6qny.onrender.com/api';
 // Uploaded documents are served from the server root (not under /api),
 // so build their URL from the same origin the API calls use.
-const ADMIN_ORIGIN = window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
+const ADMIN_ORIGIN = window.location.protocol === 'file:' ? 'https://foodlink-backend-6qny.onrender.com' : window.location.origin;
 
 function getAdminToken() {
   return localStorage.getItem('foodlink_token');

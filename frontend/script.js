@@ -4,9 +4,7 @@
  */
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const API_BASE = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? 'http://localhost:5000/api' 
-  : '/api'; // Your backend URL
+const API_BASE = 'https://foodlink-backend-6qny.onrender.com/api';
 
 // Helper to get the JWT token stored after login
 function getToken() {
