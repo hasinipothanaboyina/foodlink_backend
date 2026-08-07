@@ -35,6 +35,30 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Update volunteer details
+router.patch('/me', authMiddleware, async (req, res) => {
+  const { city, age, gender, vehicle_type, vehicle_number } = req.body;
+  try {
+    const updates = [];
+    const values = [];
+    if (city !== undefined) { updates.push('city = ?'); values.push(city); }
+    if (age !== undefined) { updates.push('age = ?'); values.push(age); }
+    if (gender !== undefined) { updates.push('gender = ?'); values.push(gender); }
+    if (vehicle_type !== undefined) { updates.push('vehicle_type = ?'); values.push(vehicle_type); }
+    if (vehicle_number !== undefined) { updates.push('vehicle_number = ?'); values.push(vehicle_number); }
+
+    if (updates.length === 0) return res.status(400).json({ message: 'No fields to update.' });
+
+    values.push(req.user.id);
+    await pool.query(`UPDATE volunteers SET ${updates.join(', ')} WHERE user_id = ?`, values);
+    
+    return res.json({ message: 'Profile updated successfully.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error updating profile.' });
+  }
+});
+
 // Update volunteer status (available, busy, offline)
 router.patch('/status', authMiddleware, async (req, res) => {
   const { status } = req.body;

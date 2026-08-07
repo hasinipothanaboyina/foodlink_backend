@@ -233,6 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('ngoDetailsModal').style.display = 'none';
     });
   }
+  const closeVolBtn = document.getElementById('closeVolModalBtn');
+  if (closeVolBtn) {
+    closeVolBtn.addEventListener('click', () => {
+      document.getElementById('volDetailsModal').style.display = 'none';
+    });
+  }
 });
 
 // ─── LOAD RECENT LOGS ───────────────────────────────────────────────────────
@@ -342,12 +348,50 @@ async function loadVolunteers() {
         <td>${v.vehicle_type} (${v.vehicle_number})</td>
         <td>₹${v.earnings}</td>
         <td>
+          <button class="btn btn-outline view-volunteer-btn" data-vol='${JSON.stringify(v).replace(/'/g, "&apos;")}' style="padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem;">
+            <i class="fa-solid fa-eye"></i> View
+          </button>
           <button class="btn btn-primary remove-volunteer-btn" data-id="${v.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #f43f5e; border-color: #f43f5e;">
             <i class="fa-solid fa-trash"></i> Remove
           </button>
         </td>
       </tr>
     `).join('');
+
+    // Attach View handlers
+    document.querySelectorAll('.view-volunteer-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const vol = JSON.parse(btn.dataset.vol);
+        const modal = document.getElementById('volDetailsModal');
+        
+        document.getElementById('modalVolNameTag').textContent = vol.name;
+        document.getElementById('modalVolEmail').textContent = vol.email;
+        
+        const photoEl = document.getElementById('modalVolPhoto');
+        const initEl = document.getElementById('modalVolInitials');
+        if (vol.photo_url) {
+            photoEl.src = `${ADMIN_ORIGIN}${vol.photo_url}`;
+            photoEl.style.display = 'block';
+            initEl.style.display = 'none';
+        } else {
+            photoEl.style.display = 'none';
+            initEl.textContent = vol.name.charAt(0);
+            initEl.style.display = 'flex';
+        }
+
+        document.getElementById('modalVolContent').innerHTML = `
+            <p><strong>City:</strong> ${vol.city || '-'}</p>
+            <p><strong>Age:</strong> ${vol.age || '-'}</p>
+            <p><strong>Gender:</strong> ${vol.gender || '-'}</p>
+            <p><strong>Phone:</strong> ${vol.phone || '-'}</p>
+            <p><strong>Vehicle:</strong> ${vol.vehicle_type} (${vol.vehicle_number})</p>
+            <p><strong>Earnings:</strong> ₹${vol.earnings || 0}</p>
+            <p><strong>Status:</strong> ${vol.status}</p>
+            <p><strong>Registered:</strong> ${new Date(vol.created_at).toLocaleDateString()}</p>
+        `;
+        modal.style.display = 'flex';
+      });
+    });
 
     // Attach Remove handlers
     document.querySelectorAll('.remove-volunteer-btn').forEach((btn) => {

@@ -117,6 +117,57 @@ async function loadOverview() {
 }
 
 // ==========================================
+// EDIT PROFILE LOGIC
+// ==========================================
+document.getElementById('editProfileBtn')?.addEventListener('click', async () => {
+    try {
+        const data = await volApiCall('/volunteers/me');
+        const v = data.volunteer;
+        if (v) {
+            document.getElementById('editCity').value = v.city || '';
+            document.getElementById('editAge').value = v.age || '';
+            document.getElementById('editGender').value = v.gender || 'male';
+            document.getElementById('editVehicleType').value = v.vehicle_type || 'bike';
+            document.getElementById('editVehicleNumber').value = v.vehicle_number || '';
+            document.getElementById('editProfileModal').style.display = 'flex';
+        }
+    } catch (err) {
+        showToast('Failed to load profile details.', 'error');
+    }
+});
+
+document.getElementById('closeEditModalBtn')?.addEventListener('click', () => {
+    document.getElementById('editProfileModal').style.display = 'none';
+});
+
+document.getElementById('editProfileForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('saveProfileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+    const updates = {
+        city: document.getElementById('editCity').value,
+        age: document.getElementById('editAge').value,
+        gender: document.getElementById('editGender').value,
+        vehicle_type: document.getElementById('editVehicleType').value,
+        vehicle_number: document.getElementById('editVehicleNumber').value
+    };
+
+    try {
+        const res = await volApiCall('/volunteers/me', 'PATCH', updates);
+        showToast(res.message, 'success');
+        document.getElementById('editProfileModal').style.display = 'none';
+        loadOverview(); // reload details
+    } catch (err) {
+        showToast(err.message || 'Failed to save changes.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Save Changes';
+    }
+});
+
+// ==========================================
 // LOAD DELIVERIES
 // ==========================================
 async function loadDeliveries() {
