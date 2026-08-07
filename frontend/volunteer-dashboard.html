@@ -106,25 +106,32 @@
             </ul>
         </aside>
 
-        <main class="dashboard-content">
+        <main class="main-content">
             <h2 id="pageTitle" style="margin-bottom: 2rem;">Overview</h2>
 
             <!-- OVERVIEW TAB -->
             <section id="section-overview" class="tab-content" style="display: block;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                    <div class="stat-card">
-                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Total Earnings</div>
-                        <div class="stat-value" id="statEarnings">₹0</div>
-                        <div style="font-size: 0.85rem; color: #10b981;"><i class="fa-solid fa-arrow-trend-up"></i> Paid per delivery (₹50)</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color: #10b981; background: rgba(16,185,129,0.1);"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                        <div class="metric-info">
+                            <h3 id="statEarnings">₹0</h3>
+                            <p>Total Earnings</p>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Completed Rides</div>
-                        <div class="stat-value" id="statRides">0</div>
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                        <div class="metric-info">
+                            <h3 id="statRides">0</h3>
+                            <p>Completed Rides</p>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Vehicle Registered</div>
-                        <div class="stat-value" id="statVehicle" style="font-size: 1.5rem;">-</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);" id="statVehicleNo">-</div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="color: #3b82f6; background: rgba(59,130,246,0.1);"><i class="fa-solid fa-car"></i></div>
+                        <div class="metric-info">
+                            <h3 id="statVehicle">-</h3>
+                            <p id="statVehicleNo">Vehicle Info</p>
+                        </div>
                     </div>
                 </div>
             </section>
