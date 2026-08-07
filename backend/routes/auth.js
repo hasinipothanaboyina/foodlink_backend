@@ -8,12 +8,26 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/connection');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
 
+// Configure multer storage for volunteer photos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '..', 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
 // ─── REGISTER ─────────────────────────────────────────────────────────────
-router.post('/register', async (req, res) => {
-  const { name, email, password, role, vehicle_type, vehicle_number } = req.body;
+router.post('/register', upload.single('photo'), async (req, res) => {
+  const { name, email, password, role, vehicle_type, vehicle_number, city, age, gender } = req.body;
+  const photo_url = req.file ? `/uploads/${req.file.filename}` : null;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -42,8 +56,17 @@ router.post('/register', async (req, res) => {
     // If volunteer, add them to volunteers table
     if (role === 'volunteer') {
       await pool.query(
-        'INSERT INTO volunteers (user_id, name, vehicle_type, vehicle_number) VALUES (?, ?, ?, ?)',
-        [result.insertId, name, vehicle_type || 'None', vehicle_number || 'N/A']
+        'INSERT INTO volunteers (user_id, name, vehicle_type, vehicle_number, city, age, gender, photo_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          result.insertId, 
+          name, 
+          vehicle_type || 'None', 
+          vehicle_number || 'N/A',
+          city || 'Unknown',
+          age ? parseInt(age, 10) : null,
+          gender || 'Unknown',
+          photo_url
+        ]
       );
     }
 

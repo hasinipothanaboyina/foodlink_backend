@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user.name) {
         volNameNav.textContent = user.name;
         volInitials.textContent = user.name.charAt(0).toUpperCase();
+        document.getElementById('pdName').textContent = user.name;
     }
     loadOverview();
 });
@@ -89,6 +90,22 @@ async function loadOverview() {
             document.getElementById('statEarnings').textContent = `₹${v.earnings || '0.00'}`;
             document.getElementById('statVehicle').textContent = v.vehicle_type || 'None';
             document.getElementById('statVehicleNo').textContent = v.vehicle_number || 'N/A';
+            
+            // Personal Details
+            document.getElementById('pdCity').textContent = v.city || '-';
+            document.getElementById('pdAge').textContent = v.age || '-';
+            document.getElementById('pdGender').textContent = v.gender ? (v.gender.charAt(0).toUpperCase() + v.gender.slice(1)) : '-';
+            document.getElementById('pdVehicleType').textContent = v.vehicle_type || '-';
+            document.getElementById('pdVehicleNumber').textContent = v.vehicle_number || '-';
+            
+            // Photo
+            const photoEl = document.getElementById('volPhoto');
+            if (v.photo_url) {
+                const API_ORIGIN = window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
+                photoEl.src = `${API_ORIGIN}${v.photo_url}`;
+                photoEl.style.display = 'block';
+                document.getElementById('volInitials').style.display = 'none';
+            }
         }
 
         const hist = await volApiCall('/donations/volunteer-history');

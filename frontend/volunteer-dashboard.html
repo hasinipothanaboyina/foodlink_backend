@@ -86,6 +86,7 @@
         </a>
         <div class="nav-links" style="display: flex; gap: 1rem; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.6rem; background: white; padding: 0.3rem 0.8rem 0.3rem 0.3rem; border-radius: 999px; border: 1px solid var(--border);">
+                <img id="volPhoto" src="" alt="Photo" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: none;">
                 <div id="volInitials" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">V</div>
                 <span id="volNameNav" style="font-size: 0.9rem; font-weight: 600; color: var(--text-dark); text-transform: capitalize; padding-right: 0.3rem;">Volunteer</span>
             </div>
@@ -132,6 +133,18 @@
                             <h3 id="statVehicle">-</h3>
                             <p id="statVehicleNo">Vehicle Info</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;"><i class="fa-solid fa-address-card"></i> Personal Details</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">Full Name</strong><p id="pdName" style="font-weight:500;">-</p></div>
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">City</strong><p id="pdCity" style="font-weight:500;">-</p></div>
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">Age</strong><p id="pdAge" style="font-weight:500;">-</p></div>
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">Gender</strong><p id="pdGender" style="font-weight:500;">-</p></div>
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">Vehicle Type</strong><p id="pdVehicleType" style="font-weight:500;">-</p></div>
+                        <div><strong style="color:var(--text-muted);font-size:0.85rem;">Vehicle Number</strong><p id="pdVehicleNumber" style="font-weight:500;">-</p></div>
                     </div>
                 </div>
             </section>

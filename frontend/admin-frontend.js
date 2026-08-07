@@ -311,6 +311,74 @@ async function loadUsers() {
   }
 }
 
+// ─── LOAD VOLUNTEERS ────────────────────────────────────────────────────────
+async function loadVolunteers() {
+  const tbody = document.getElementById('volunteersTableBody');
+  if (!tbody) return;
+  try {
+    const data = await adminApiCall('/admin/volunteers');
+    if (data.message) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f43f5e;">Error: ${data.message}</td></tr>`;
+      return;
+    }
+    if (!data.volunteers || data.volunteers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No volunteers found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.volunteers.map((v) => `
+      <tr style="border-color: #334155;">
+        <td>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            ${v.photo_url 
+              ? `<img src="${ADMIN_ORIGIN}${v.photo_url}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` 
+              : `<div style="width:30px; height:30px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">${v.name.charAt(0)}</div>`}
+            <div>
+              <strong>${v.name}</strong><br>
+              <small style="color:var(--text-muted);">${v.email}</small>
+            </div>
+          </div>
+        </td>
+        <td>${v.city || 'Unknown'}</td>
+        <td>${v.vehicle_type} (${v.vehicle_number})</td>
+        <td>₹${v.earnings}</td>
+        <td>
+          <button class="btn btn-primary remove-volunteer-btn" data-id="${v.id}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #f43f5e; border-color: #f43f5e;">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    // Attach Remove handlers
+    document.querySelectorAll('.remove-volunteer-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to permanently remove this Volunteer and their account?')) return;
+        const volId = btn.dataset.id;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+          const result = await adminApiCall(`/admin/volunteers/${volId}`, 'DELETE');
+          if (result.message && result.message.includes('removed')) {
+            await loadVolunteers();
+          } else {
+            alert(result.message || 'Failed to remove volunteer.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i> Remove';
+          }
+        } catch (err) {
+          alert('Cannot connect to server.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-trash"></i> Remove';
+        }
+      });
+    });
+
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#f43f5e;">Failed to load volunteers.</td></tr>';
+  }
+}
+
 // ─── LOAD ISSUES (Real Database) ────────────────────────────────────────────
 async function loadIssues() {
   const tbody = document.getElementById('issuesTableBody');
@@ -406,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Tab switching logic
-  const tabs = ['overview', 'users', 'ngos', 'issues'];
+  const tabs = ['overview', 'users', 'ngos', 'volunteers', 'issues'];
   tabs.forEach(tab => {
     const tabLink = document.getElementById(`tab-${tab}`);
     if (tabLink) {
@@ -422,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load specific data
         if (tab === 'users') loadUsers();
+        if (tab === 'volunteers') loadVolunteers();
         if (tab === 'ngos') {
           // Default to Pending view
           document.getElementById('section-pending-ngos').style.display = 'block';

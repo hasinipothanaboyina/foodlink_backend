@@ -38,6 +38,7 @@
                 <li><a href="#" id="tab-overview" class="active"><i class="fa-solid fa-globe"></i> Global Overview</a></li>
                 <li><a href="#" id="tab-users"><i class="fa-solid fa-users"></i> User Management</a></li>
                 <li><a href="#" id="tab-ngos"><i class="fa-solid fa-building-ngo"></i> NGO Management</a></li>
+                <li><a href="#" id="tab-volunteers"><i class="fa-solid fa-person-running"></i> Volunteer Management</a></li>
                 <li><a href="#" id="tab-issues"><i class="fa-solid fa-triangle-exclamation"></i> Reported Issues</a></li>
             </ul>
         </aside>
@@ -173,6 +174,26 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <div id="view-volunteers" class="admin-view" style="display: none;">
+                <h3 style="margin-bottom: 1rem;">Volunteer Management</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Volunteer Name</th>
+                                <th>City</th>
+                                <th>Vehicle</th>
+                                <th>Earnings</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volunteersTableBody">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

@@ -217,4 +217,31 @@ router.patch('/issues/:id/resolve', async (req, res) => {
   }
 });
 
+// ─── VOLUNTEERS ─────────────────────────────────────────────────────────────
+router.get('/volunteers', async (req, res) => {
+  try {
+    const [volunteers] = await pool.query('SELECT v.*, u.email FROM volunteers v JOIN users u ON v.user_id = u.id ORDER BY v.created_at DESC');
+    return res.json({ volunteers });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching volunteers.' });
+  }
+});
+
+router.delete('/volunteers/:id', async (req, res) => {
+  try {
+    const [volRows] = await pool.query('SELECT user_id FROM volunteers WHERE id = ?', [req.params.id]);
+    if (volRows.length === 0) return res.status(404).json({ message: 'Volunteer not found.' });
+    
+    const userId = volRows[0].user_id;
+    // Deleting the user will cascade and delete the volunteer record
+    await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+    
+    return res.json({ message: 'Volunteer removed successfully.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error removing volunteer.' });
+  }
+});
+
 module.exports = router;

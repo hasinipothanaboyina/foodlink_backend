@@ -318,6 +318,35 @@
     <!-- Toast container -->
     <div id="toastContainer"></div>
 
+    <!-- Volunteer Feedback Modal -->
+    <div id="volunteerFeedbackModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content glass" style="background: var(--surface); padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Rate Volunteer</h3>
+                <button id="closeFeedbackModal" style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer;">&times;</button>
+            </div>
+            <form id="feedbackForm">
+                <input type="hidden" id="feedbackVolunteerId">
+                <input type="hidden" id="feedbackDonationId">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Rating (1-5 Stars)</label>
+                    <select id="feedbackRating" class="form-control" required>
+                        <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+                        <option value="4">⭐⭐⭐⭐ (4 - Good)</option>
+                        <option value="3">⭐⭐⭐ (3 - Average)</option>
+                        <option value="2">⭐⭐ (2 - Poor)</option>
+                        <option value="1">⭐ (1 - Terrible)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Comments (Optional)</label>
+                    <textarea id="feedbackComment" class="form-control" rows="3" placeholder="How was the volunteer's service?"></textarea>
+                </div>
+                <button type="submit" id="submitFeedbackBtn" class="btn btn-primary" style="width: 100%; justify-content: center;">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script>
     const NGO_API = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
@@ -585,11 +614,14 @@
         const tbody = document.getElementById('ngoHistoryBody');
         const hist = donations.filter(d => ['completed', 'cancelled'].includes(d.status));
         if (!hist.length) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No completed donations yet.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">No completed donations yet.</td></tr>';
             return;
         }
         tbody.innerHTML = hist.map(d => {
             const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.address || '')}`;
+            const rateBtn = (d.status === 'completed' && d.volunteer_id) 
+                ? `<button class="btn btn-outline rate-volunteer-btn" data-vol-id="${d.volunteer_id}" data-don-id="${d.id}" style="padding:0.25rem 0.5rem; font-size:0.75rem;"><i class="fa-solid fa-star"></i> Rate</button>` 
+                : '';
             return `
             <tr>
                 <td>#FL-${d.id}</td>
@@ -600,8 +632,18 @@
                 <td>${statusBadge(d.status)}</td>
                 <td>${new Date(d.created_at).toLocaleDateString()}</td>
                 <td><a href="${mapUrl}" target="_blank" style="color:var(--primary);font-size:0.85rem;"><i class="fa-solid fa-location-arrow"></i> Map</a></td>
+                <td>${rateBtn}</td>
             </tr>`;
         }).join('');
+
+        // Attach rate volunteer handlers
+        document.querySelectorAll('.rate-volunteer-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('feedbackVolunteerId').value = btn.dataset.volId;
+                document.getElementById('feedbackDonationId').value = btn.dataset.donId;
+                document.getElementById('volunteerFeedbackModal').style.display = 'flex';
+            });
+        });
     }
 
     function updateStatusDropdownStyles(selectEl) {
@@ -639,10 +681,43 @@
         // Auto-refresh incoming donations every 15 seconds
         setInterval(() => {
             // Only refresh if not doing an action like accepting/rejecting
-            if (document.querySelectorAll('.fa-spinner').length === 0) {
+            if (document.querySelectorAll('.fa-spinner').length === 0 && document.getElementById('volunteerFeedbackModal').style.display !== 'flex') {
                 loadNGOData();
             }
         }, 15000);
+
+        // Feedback Modal Logic
+        document.getElementById('closeFeedbackModal').addEventListener('click', () => {
+            document.getElementById('volunteerFeedbackModal').style.display = 'none';
+        });
+
+        document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitFeedbackBtn');
+            const volId = document.getElementById('feedbackVolunteerId').value;
+            const donationId = document.getElementById('feedbackDonationId').value;
+            const rating = document.getElementById('feedbackRating').value;
+            const comment = document.getElementById('feedbackComment').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const res = await ngoApiCall(`/volunteers/${volId}/feedback`, 'POST', {
+                    donation_id: donationId,
+                    rating: parseInt(rating, 10),
+                    comment: comment
+                });
+                showToast(res.message, 'success');
+                document.getElementById('volunteerFeedbackModal').style.display = 'none';
+                document.getElementById('feedbackForm').reset();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Feedback';
+            }
+        });
 
         const tabs = ['overview', 'incoming', 'history', 'network'];
         tabs.forEach(tab => {

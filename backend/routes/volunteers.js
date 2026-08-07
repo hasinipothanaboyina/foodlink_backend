@@ -141,4 +141,46 @@ router.get('/volunteer-partners', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── VOLUNTEER FEEDBACK ───────────────────────────────────────────────────
+router.post('/:id/feedback', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'ngo') return res.status(403).json({ message: 'Only NGOs can submit feedback.' });
+  
+  const volunteerId = req.params.id;
+  const { donation_id, rating, comment } = req.body;
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ message: 'Valid rating (1-5) is required.' });
+
+  try {
+    // Find the NGO ID
+    const [ngoRows] = await pool.query('SELECT id FROM ngos WHERE user_id = ?', [req.user.id]);
+    if (ngoRows.length === 0) return res.status(404).json({ message: 'NGO record not found.' });
+    
+    await pool.query(
+      'INSERT INTO volunteer_feedback (volunteer_id, ngo_id, donation_id, rating, comment) VALUES (?, ?, ?, ?, ?)',
+      [volunteerId, ngoRows[0].id, donation_id || null, rating, comment || null]
+    );
+    
+    return res.json({ message: 'Feedback submitted successfully.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error submitting feedback.' });
+  }
+});
+
+router.get('/:id/feedback', authMiddleware, async (req, res) => {
+  try {
+    const [feedback] = await pool.query(`
+      SELECT f.*, n.name as ngo_name 
+      FROM volunteer_feedback f 
+      JOIN ngos n ON f.ngo_id = n.id 
+      WHERE f.volunteer_id = ? 
+      ORDER BY f.created_at DESC
+    `, [req.params.id]);
+    
+    return res.json({ feedback });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching feedback.' });
+  }
+});
+
 module.exports = router;

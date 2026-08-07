@@ -72,8 +72,22 @@ async function runMigrations() {
     "ALTER TABLE volunteers ADD COLUMN vehicle_type VARCHAR(100)",
     "ALTER TABLE volunteers ADD COLUMN vehicle_number VARCHAR(100)",
     "ALTER TABLE volunteers ADD COLUMN earnings DECIMAL(10,2) DEFAULT 0.00",
+    "ALTER TABLE volunteers ADD COLUMN age INT NULL",
+    "ALTER TABLE volunteers ADD COLUMN gender VARCHAR(20) NULL",
+    "ALTER TABLE volunteers ADD COLUMN photo_url VARCHAR(255) NULL",
     "ALTER TABLE volunteers MODIFY phone VARCHAR(20) NULL",
-    "ALTER TABLE volunteers MODIFY city VARCHAR(100) NULL"
+    "ALTER TABLE volunteers MODIFY city VARCHAR(100) NULL",
+    `CREATE TABLE IF NOT EXISTS volunteer_feedback (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      volunteer_id INT NOT NULL,
+      ngo_id INT NOT NULL,
+      donation_id INT,
+      rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (volunteer_id) REFERENCES volunteers(id) ON DELETE CASCADE,
+      FOREIGN KEY (ngo_id) REFERENCES ngos(id) ON DELETE CASCADE
+    )`
   ];
   for (const q of queries) {
     try {
