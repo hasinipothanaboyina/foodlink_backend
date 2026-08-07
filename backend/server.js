@@ -64,6 +64,28 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// Auto-run schema migrations on startup for live DBs
+const pool = require('./db/connection');
+async function runMigrations() {
+  console.log('Running auto-migrations on startup...');
+  const queries = [
+    "ALTER TABLE volunteers ADD COLUMN vehicle_type VARCHAR(100)",
+    "ALTER TABLE volunteers ADD COLUMN vehicle_number VARCHAR(100)",
+    "ALTER TABLE volunteers ADD COLUMN earnings DECIMAL(10,2) DEFAULT 0.00",
+    "ALTER TABLE volunteers MODIFY phone VARCHAR(20) NULL",
+    "ALTER TABLE volunteers MODIFY city VARCHAR(100) NULL"
+  ];
+  for (const q of queries) {
+    try {
+      await pool.query(q);
+    } catch (err) {
+      // Ignore errors (like duplicate column)
+    }
+  }
+  console.log('Auto-migrations completed successfully.');
+}
+runMigrations();
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
