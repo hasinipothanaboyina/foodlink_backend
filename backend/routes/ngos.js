@@ -162,4 +162,22 @@ router.patch('/status', authMiddleware, async (req, res) => {
   }
 });
 
+// ─── TOGGLE SOS MODE ────────────────────────────────────────────────────────────
+router.patch('/sos', authMiddleware, async (req, res) => {
+  const { is_sos } = req.body;
+  try {
+    const [result] = await pool.query(
+      'UPDATE ngos SET is_sos = ? WHERE user_id = ?',
+      [is_sos ? 1 : 0, req.user.id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'NGO not found for this user.' });
+    }
+    return res.json({ message: `SOS mode ${is_sos ? 'activated' : 'deactivated'}.` });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error updating SOS status.' });
+  }
+});
+
 module.exports = router;

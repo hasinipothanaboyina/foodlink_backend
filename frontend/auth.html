@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NGO & Admin Login | FoodLink AI</title>
+    <title>NGO, Admin & Volunteer Login | FoodLink AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
@@ -38,9 +38,9 @@
     <div class="auth-container">
         <div class="card reveal" style="width:100%; max-width:400px; text-align:center;">
             <i class="fa-solid fa-lock" style="font-size:2rem; color:var(--primary); margin-bottom:1rem;"></i>
-            <h2 style="margin-bottom:0.5rem;">NGO & Admin Login</h2>
+            <h2 style="margin-bottom:0.5rem;">NGO, Admin & Volunteer Login</h2>
             <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.95rem;">
-                Sign in to manage your organisation and monitor donations.
+                Sign in to manage your organisation, monitor donations, or deliver food.
             </p>
 
             <!-- Error banner -->
@@ -79,11 +79,19 @@
                     Sign In <i class="fa-solid fa-arrow-right"></i>
                 </button>
 
-                <div style="text-align:center; font-size:0.9rem; color:var(--text-muted);">
-                    Don't have an account?
-                    <a href="ngo-register.html" style="color:var(--primary); text-decoration:none; font-weight:600;">
-                        Register NGO
-                    </a>
+                <div style="text-align:center; font-size:0.9rem; color:var(--text-muted); display:flex; flex-direction:column; gap:0.5rem;">
+                    <div>
+                        Don't have an NGO account?
+                        <a href="ngo-register.html" style="color:var(--primary); text-decoration:none; font-weight:600;">
+                            Register NGO
+                        </a>
+                    </div>
+                    <div>
+                        Want to deliver food?
+                        <a href="volunteer-register.html" style="color:var(--secondary); text-decoration:none; font-weight:600;">
+                            Register as Volunteer
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -141,8 +149,10 @@
                         window.location.href = 'admin.html';
                     } else if (data.user.role === 'ngo') {
                         window.location.href = 'dashboard.html';
+                    } else if (data.user.role === 'volunteer') {
+                        window.location.href = 'volunteer-dashboard.html';
                     } else {
-                        window.location.href = 'my-donations.html';
+                        window.location.href = 'index.html'; // Fallback
                     }
                 } else {
                     errorText.textContent = data.message || 'Invalid email or password.';

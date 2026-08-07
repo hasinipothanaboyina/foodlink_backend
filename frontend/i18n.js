@@ -12,8 +12,11 @@ const translations = {
     choice_donor_desc: 'Instantly match with the nearest NGO that needs your surplus. No account required.',
     choice_ngo: 'I represent an NGO',
     choice_ngo_desc: 'Register your capacity and receive real-time alerts when food is available near you.',
+    choice_volunteer: 'Volunteer with us',
+    choice_volunteer_desc: 'Join our fleet to pick up and deliver surplus food to NGOs in need.',
     btn_donate: 'Donate Now',
     btn_join: 'Join Network',
+    btn_volunteer: 'Become a Volunteer',
     
     don_title: 'Donate Surplus Food',
     don_subtitle: 'Our AI will instantly match your food with the nearest verified NGO. No account needed.',
@@ -46,8 +49,11 @@ const translations = {
     choice_donor_desc: 'మీ మిగులు అవసరమైన సమీప NGOతో తక్షణమే సరిపోలండి. ఖాతా అవసరం లేదు.',
     choice_ngo: 'నేను NGO ప్రతినిధిని',
     choice_ngo_desc: 'మీ సామర్థ్యాన్ని నమోదు చేసుకోండి మరియు మీకు సమీపంలో ఆహారం అందుబాటులో ఉన్నప్పుడు రియల్ టైమ్ అలర్ట్‌లను పొందండి.',
+    choice_volunteer: 'మాతో వాలంటీర్ చేయండి',
+    choice_volunteer_desc: 'అవసరమైన NGOలకు అదనపు ఆహారాన్ని అందించడానికి మా నెట్‌వర్క్‌లో చేరండి.',
     btn_donate: 'ఇప్పుడే దానం చేయండి',
     btn_join: 'నెట్‌వర్క్‌లో చేరండి',
+    btn_volunteer: 'వాలంటీర్ అవ్వండి',
     
     don_title: 'మిగులు ఆహారాన్ని దానం చేయండి',
     don_subtitle: 'మా AI మీ ఆహారాన్ని సమీప ధృవీకరించబడిన NGOతో తక్షణమే జత చేస్తుంది. ఖాతా అవసరం లేదు.',

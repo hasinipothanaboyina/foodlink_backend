@@ -133,20 +133,75 @@ function renderPagination(pagination) {
 
 async function loadImpactStats() {
   try {
-    const data = await apiCall('/donations/my-impact');
-    if (data.impact) {
-      document.getElementById('impactMeals').textContent = data.impact.totalMeals.toLocaleString();
-      document.getElementById('impactTotal').textContent = data.impact.totalDonations.toLocaleString();
-      document.getElementById('impactCO2').textContent = data.impact.co2Saved.toLocaleString();
+    const data = await apiCall('/donations/my-stats');
+    if (data) {
+      document.getElementById('impactMeals').textContent = Math.round(data.mealsProvided).toLocaleString();
+      document.getElementById('impactTotal').textContent = data.totalDonations.toLocaleString();
+      document.getElementById('impactCO2').textContent = Math.round(data.co2Saved).toLocaleString();
+      
+      // Badges gamification logic
+      const badgeIcon = document.getElementById('badgeIcon');
+      const donorBadge = document.getElementById('donorBadge');
+      if (badgeIcon && donorBadge) {
+        if (data.totalDonations >= 50) {
+          donorBadge.textContent = 'Platinum Hero';
+          donorBadge.style.color = '#1e3a8a';
+          badgeIcon.style.color = '#1e40af';
+          badgeIcon.className = 'fa-solid fa-crown';
+          badgeIcon.parentElement.style.background = 'rgba(255,255,255,0.6)';
+          badgeIcon.parentElement.parentElement.style.background = 'linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)';
+          badgeIcon.parentElement.parentElement.style.borderColor = '#60a5fa';
+        } else if (data.totalDonations >= 20) {
+          donorBadge.textContent = 'Gold Donor';
+          badgeIcon.className = 'fa-solid fa-award';
+        } else if (data.totalDonations >= 5) {
+          donorBadge.textContent = 'Silver Donor';
+          donorBadge.style.color = '#374151';
+          badgeIcon.style.color = '#4b5563';
+          badgeIcon.className = 'fa-solid fa-medal';
+          badgeIcon.parentElement.parentElement.style.background = 'linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)';
+          badgeIcon.parentElement.parentElement.style.borderColor = '#9ca3af';
+        } else if (data.totalDonations > 0) {
+          donorBadge.textContent = 'Bronze Donor';
+          donorBadge.style.color = '#78350f';
+          badgeIcon.style.color = '#92400e';
+          badgeIcon.parentElement.parentElement.style.background = 'linear-gradient(135deg, #fed7aa 0%, #fdba74 100%)';
+          badgeIcon.parentElement.parentElement.style.borderColor = '#fb923c';
+        } else {
+          donorBadge.textContent = 'Starter';
+        }
+      }
     }
   } catch(err) {
     console.error('Could not load impact stats', err);
   }
 }
 
+async function loadSosAlerts() {
+  try {
+    const ngos = await apiCall('/donations/sos-ngos');
+    const container = document.getElementById('sosAlertsContainer');
+    const list = document.getElementById('sosNgosList');
+    
+    if (ngos && ngos.length > 0 && container && list) {
+      container.style.display = 'block';
+      list.innerHTML = ngos.map(ngo => `
+        <div style="background: white; padding: 1rem; border-radius: var(--radius-sm); box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #ef4444;">
+          <h4 style="margin: 0 0 0.25rem 0; color: #b91c1c;">${ngo.name}</h4>
+          <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #4b5563;"><i class="fa-solid fa-location-dot"></i> ${ngo.city} - ${ngo.address}</p>
+          <a href="donate.html?ngo=${ngo.id}" class="btn btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #ef4444; border-color: #ef4444; width: 100%; justify-content: center;">Donate Now</a>
+        </div>
+      `).join('');
+    }
+  } catch(err) {
+    console.error('Could not load SOS alerts', err);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadDonationsPage(currentPage, currentStatus);
   loadImpactStats();
+  loadSosAlerts();
 
   const statusFilter = document.getElementById('statusFilter');
   if (statusFilter) {

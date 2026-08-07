@@ -141,6 +141,52 @@ async function findBestNGO(donation, excludeIds = []) {
 
   return best;
 }
+
+// ─── IMPACT DASHBOARD STATS ──────────────────────────────────────────────────
+router.get('/my-stats', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations WHERE user_id = ? AND status = "completed"',
+      [req.user.id]
+    );
+    const stats = rows[0];
+    const totalKg = stats.totalKg || 0;
+    const totalDonations = stats.totalDonations || 0;
+    const mealsProvided = totalKg * 3; // Approx 3 meals per kg
+    const co2Saved = totalKg * 2.5; // Approx 2.5kg CO2 saved per kg of food
+    
+    res.json({ totalDonations, totalKg, mealsProvided, co2Saved });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching stats' });
+  }
+});
+
+// ─── URGENT SOS NGOS ─────────────────────────────────────────────────────────
+router.get('/sos-ngos', async (req, res) => {
+  try {
+    const [ngos] = await pool.query('SELECT id, name, city, address, phone FROM ngos WHERE is_sos = 1 AND approved = 1');
+    res.json(ngos);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching SOS NGOs' });
+  }
+});
+
+// ─── AI RECOMMENDATION (PRE-DONATION) ────────────────────────────────────────
+router.post('/recommend', async (req, res) => {
+  try {
+    const bestMatch = await findBestNGO(req.body);
+    if (bestMatch && bestMatch.ngo) {
+      res.json({ ngo: bestMatch.ngo, distance: bestMatch.distance });
+    } else {
+      res.json({ ngo: null });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error finding recommendation' });
+  }
+});
 // ─── PUBLIC DONATION (No Login) ───────────────────────────────────────────
 router.post('/public', async (req, res) => {
   const { donor_name, donor_phone, food_type, quantity, pickup_by, address, city, latitude, longitude, delivery_method } = req.body;
@@ -149,18 +195,24 @@ router.post('/public', async (req, res) => {
     return res.status(400).json({ message: 'Food type, quantity, pickup time, address, and city are required.' });
   }
 
-  // Auto-tag urgency based on time or food type
+  // Auto-tag urgency and expiry based on time or food type
   const currentHour = new Date().getHours();
   let is_urgent = 0;
+  let expires_at = null;
   if (food_type === 'cooked' || currentHour >= 20 || currentHour <= 5) {
     is_urgent = 1;
+  }
+  if (food_type === 'cooked') {
+    const d = new Date();
+    d.setHours(d.getHours() + 4);
+    expires_at = d.toISOString().slice(0, 19).replace('T', ' '); // format for MySQL datetime
   }
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO donations (donor_name, donor_phone, food_type, quantity, pickup_by, address, city, latitude, longitude, delivery_method, status, is_urgent, last_matched_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())`,
-      [donor_name || 'Anonymous', donor_phone || '', food_type, quantity, pickup_by, address, city, latitude ?? null, longitude ?? null, delivery_method || 'donor_delivers', is_urgent]
+      `INSERT INTO donations (donor_name, donor_phone, food_type, quantity, pickup_by, address, city, latitude, longitude, delivery_method, status, is_urgent, expires_at, last_matched_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())`,
+      [donor_name || 'Anonymous', donor_phone || '', food_type, quantity, pickup_by, address, city, latitude ?? null, longitude ?? null, delivery_method || 'donor_delivers', is_urgent, expires_at]
     );
 
     const donationId = result.insertId;
@@ -227,15 +279,21 @@ router.post('/', authMiddleware, async (req, res) => {
 
   const currentHour = new Date().getHours();
   let is_urgent = 0;
+  let expires_at = null;
   if (food_type === 'cooked' || currentHour >= 20 || currentHour <= 5) {
     is_urgent = 1;
+  }
+  if (food_type === 'cooked') {
+    const d = new Date();
+    d.setHours(d.getHours() + 4);
+    expires_at = d.toISOString().slice(0, 19).replace('T', ' ');
   }
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO donations (user_id, food_type, quantity, pickup_by, address, city, description, latitude, longitude, status, is_urgent, last_matched_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())`,
-      [req.user.id, food_type, quantity, pickup_by, address, city, description || '', latitude ?? null, longitude ?? null, is_urgent]
+      `INSERT INTO donations (user_id, food_type, quantity, pickup_by, address, city, description, latitude, longitude, status, is_urgent, expires_at, last_matched_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW())`,
+      [req.user.id, food_type, quantity, pickup_by, address, city, description || '', latitude ?? null, longitude ?? null, is_urgent, expires_at]
     );
 
     const donationId = result.insertId;
@@ -457,17 +515,105 @@ router.patch('/:id/complete', authMiddleware, async (req, res) => {
 // so that static paths like ngo-incoming are matched first.
 router.patch('/:id/accept', authMiddleware, async (req, res) => {
   try {
+    const { needs_volunteer } = req.body;
     const [ngoRows] = await pool.query('SELECT id FROM ngos WHERE user_id = ? AND approved = 1', [req.user.id]);
     if (ngoRows.length === 0) return res.status(403).json({ message: 'Not an approved NGO.' });
 
     const [rows] = await pool.query('SELECT * FROM donations WHERE id = ? AND ngo_id = ?', [req.params.id, ngoRows[0].id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Donation not found for your NGO.' });
 
-    await pool.query(`UPDATE donations SET status = 'in_transit' WHERE id = ?`, [req.params.id]);
-    return res.json({ message: 'Donation accepted! Status updated to In Transit.' });
+    if (needs_volunteer) {
+      await pool.query(`UPDATE donations SET delivery_method = 'volunteer' WHERE id = ?`, [req.params.id]);
+      return res.json({ message: 'Donation accepted! Waiting for a volunteer to claim the delivery.' });
+    } else {
+      await pool.query(`UPDATE donations SET status = 'in_transit' WHERE id = ?`, [req.params.id]);
+      return res.json({ message: 'Donation accepted! Status updated to In Transit.' });
+    }
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ─── VOLUNTEER ENDPOINTS ──────────────────────────────────────────────────
+router.get('/volunteer-available', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') return res.status(403).json({ message: 'Only volunteers can access this.' });
+    const [donations] = await pool.query(
+      `SELECT d.*, n.address AS ngo_address, n.name AS ngo_name, n.city
+       FROM donations d 
+       LEFT JOIN ngos n ON d.ngo_id = n.id
+       WHERE d.delivery_method = 'volunteer' AND d.volunteer_id IS NULL AND d.status = 'matched'
+       ORDER BY d.created_at ASC`
+    );
+    return res.json({ donations });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching volunteer deliveries.' });
+  }
+});
+
+router.get('/volunteer-history', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') return res.status(403).json({ message: 'Only volunteers can access this.' });
+    const [donations] = await pool.query(
+      `SELECT d.*, n.address AS ngo_address, n.name AS ngo_name, n.city
+       FROM donations d 
+       LEFT JOIN ngos n ON d.ngo_id = n.id
+       WHERE d.volunteer_id = ?
+       ORDER BY d.created_at DESC`,
+       [req.user.id]
+    );
+    return res.json({ donations });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching volunteer history.' });
+  }
+});
+
+router.patch('/:id/claim-delivery', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') return res.status(403).json({ message: 'Only volunteers can claim deliveries.' });
+    
+    const [result] = await pool.query(
+      `UPDATE donations SET status = 'in_transit', volunteer_id = ? WHERE id = ? AND delivery_method = 'volunteer' AND volunteer_id IS NULL`,
+      [req.user.id, req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ message: 'Delivery already claimed or not found.' });
+    }
+
+    return res.json({ message: 'Delivery claimed successfully! You earn ₹50 upon completion.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error claiming delivery.' });
+  }
+});
+
+router.patch('/:id/complete-delivery', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'volunteer') return res.status(403).json({ message: 'Only volunteers can complete deliveries.' });
+    
+    const [result] = await pool.query(
+      `UPDATE donations SET status = 'completed' WHERE id = ? AND delivery_method = 'volunteer' AND volunteer_id = ? AND status = 'in_transit'`,
+      [req.params.id, req.user.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ message: 'Delivery not found or not in transit.' });
+    }
+
+    // Add ₹50 to earnings
+    await pool.query(
+      `UPDATE volunteers SET earnings = earnings + 50 WHERE user_id = ?`,
+      [req.user.id]
+    );
+
+    return res.json({ message: 'Delivery completed! ₹50 added to your earnings.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error completing delivery.' });
   }
 });
 

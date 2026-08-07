@@ -6,13 +6,72 @@
     <title>Volunteer Dashboard | FoodLink AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
     <script>
         (function () {
             const token = localStorage.getItem('foodlink_token');
-            if (!token) window.location.href = 'auth.html';
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'volunteer') {
+                window.location.href = 'auth.html';
+            }
         })();
     </script>
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .badge-matched   { background: rgba(59,130,246,0.12); color: #3b82f6; }
+        .badge-in_transit{ background: rgba(245,158,11,0.12); color: #f59e0b; }
+        .badge-completed { background: rgba(16,185,129,0.12); color: #10b981; }
+
+        .action-btn-group { display: flex; gap: 0.5rem; }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        #toastContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            background: #1e293b;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-size: 0.88rem;
+            animation: slideIn 0.3s ease;
+            max-width: 320px;
+        }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error   { border-left: 4px solid #f43f5e; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar glass">
@@ -26,86 +85,97 @@
             FoodLink
         </a>
         <div class="nav-links" style="display: flex; gap: 1rem; align-items: center;">
-            <a href="#" id="logoutBtn" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;"><i class="fa-solid fa-power-off"></i> Logout</a>
+            <div style="display: flex; align-items: center; gap: 0.6rem; background: white; padding: 0.3rem 0.8rem 0.3rem 0.3rem; border-radius: 999px; border: 1px solid var(--border);">
+                <div id="volInitials" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">V</div>
+                <span id="volNameNav" style="font-size: 0.9rem; font-weight: 600; color: var(--text-dark); text-transform: capitalize; padding-right: 0.3rem;">Volunteer</span>
+            </div>
+
+            <a href="#" id="volLogoutBtn" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; font-weight: 600; color: #f43f5e; padding: 0.45rem 1rem; border-radius: 999px; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.2); text-decoration: none;">
+                <i class="fa-solid fa-power-off"></i> Logout
+            </a>
         </div>
     </nav>
 
-    <div class="page-container" style="margin-top: 100px;">
-        <h2 style="margin-bottom: 1rem;">Volunteer Dashboard (Food Rescuer)</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Help deliver surplus food to NGOs. Claim a pickup below to start your route.</p>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" id="tab-overview" class="active"><i class="fa-solid fa-chart-line"></i> Overview</a></li>
+                <li><a href="#" id="tab-deliveries"><i class="fa-solid fa-truck-fast"></i> Deliveries</a></li>
+                <li><a href="#" id="tab-ngo-network"><i class="fa-solid fa-building-ngo"></i> NGO Partners</a></li>
+                <li><a href="#" id="tab-vol-network"><i class="fa-solid fa-users"></i> Volunteer Partners</a></li>
+            </ul>
+        </aside>
 
-        <div id="loading" style="text-align: center; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading pending pickups...</div>
-        
-        <div id="pickupsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
-            <!-- Pickups rendered here -->
-        </div>
+        <main class="dashboard-content">
+            <h2 id="pageTitle" style="margin-bottom: 2rem;">Overview</h2>
+
+            <!-- OVERVIEW TAB -->
+            <section id="section-overview" class="tab-content" style="display: block;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Total Earnings</div>
+                        <div class="stat-value" id="statEarnings">₹0</div>
+                        <div style="font-size: 0.85rem; color: #10b981;"><i class="fa-solid fa-arrow-trend-up"></i> Paid per delivery (₹50)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Completed Rides</div>
+                        <div class="stat-value" id="statRides">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Vehicle Registered</div>
+                        <div class="stat-value" id="statVehicle" style="font-size: 1.5rem;">-</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);" id="statVehicleNo">-</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DELIVERIES TAB -->
+            <section id="section-deliveries" class="tab-content" style="display: none;">
+                <h3 style="margin-bottom: 1rem;">Available Pick-ups</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Claim a pickup below to start your route. You earn ₹50 per completed delivery.</p>
+                <div id="loading" style="text-align: center; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+                
+                <div id="pickupsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+                    <!-- Available Pickups Rendered Here -->
+                </div>
+
+                <h3 style="margin-top: 3rem; margin-bottom: 1rem;">My Past Deliveries</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Food & Qty</th>
+                                <th>NGO Destination</th>
+                                <th>Status</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pastDeliveriesTable">
+                            <!-- Past rides rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- NGO NETWORK TAB -->
+            <section id="section-ngo-network" class="tab-content" style="display: none;">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">NGOs in the network that you can deliver to.</p>
+                <div id="ngoNetworkGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;"></div>
+            </section>
+
+            <!-- VOLUNTEER NETWORK TAB -->
+            <section id="section-vol-network" class="tab-content" style="display: none;">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Meet other volunteers helping to eradicate food waste.</p>
+                <div id="volNetworkGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;"></div>
+            </section>
+
+        </main>
     </div>
 
+    <div id="toastContainer"></div>
+
     <script src="script.js"></script>
-    <script>
-        async function loadPickups() {
-            const grid = document.getElementById('pickupsGrid');
-            const loader = document.getElementById('loading');
-            
-            try {
-                const data = await apiCall('/volunteers/pending');
-                loader.style.display = 'none';
-                
-                if (data.pickups.length === 0) {
-                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No pending pickups right now! You are all caught up.</p>';
-                    return;
-                }
-
-                grid.innerHTML = data.pickups.map(p => `
-                    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
-                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom: 1rem;">
-                            <h3 style="margin:0; font-size: 1.1rem;"><i class="fa-solid fa-box"></i> ${p.quantity}x ${p.food_type}</h3>
-                            ${p.is_urgent ? '<span style="background: rgba(244,63,94,0.1); color: #f43f5e; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700;">URGENT</span>' : ''}
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;"><strong>Pick up from:</strong></p>
-                            <p style="font-size: 0.95rem; margin-bottom: 0.2rem;">${p.donor_address}</p>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-phone"></i> ${p.donor_phone}</p>
-                        </div>
-                        <div style="margin-bottom: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;"><strong>Deliver to:</strong></p>
-                            <p style="font-size: 0.95rem; margin-bottom: 0.2rem;">${p.ngo_name}</p>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">${p.ngo_address}, ${p.city}</p>
-                        </div>
-                        <button class="btn btn-primary claim-btn" data-id="${p.request_id}" style="width: 100%; justify-content: center;">
-                            <i class="fa-solid fa-truck-fast"></i> Claim Pickup
-                        </button>
-                    </div>
-                `).join('');
-
-                document.querySelectorAll('.claim-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const id = e.target.closest('button').dataset.id;
-                        btn.disabled = true;
-                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Claiming...';
-                        try {
-                            const res = await apiCall(`/volunteers/claim/${id}`, 'PATCH');
-                            alert(res.message);
-                            loadPickups();
-                        } catch (err) {
-                            alert(err.message || 'Failed to claim');
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fa-solid fa-truck-fast"></i> Claim Pickup';
-                        }
-                    });
-                });
-            } catch (e) {
-                loader.textContent = 'Failed to load pickups. Are you registered as a Volunteer?';
-            }
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.clear();
-            window.location.href = 'index.html';
-        });
-
-        loadPickups();
-    </script>
+    <script src="volunteer-script.js"></script>
 </body>
 </html>

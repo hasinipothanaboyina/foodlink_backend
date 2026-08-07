@@ -119,4 +119,26 @@ router.patch('/claim/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Get NGO Partners
+router.get('/ngo-partners', authMiddleware, async (req, res) => {
+  try {
+    const [ngos] = await pool.query('SELECT id, name, city, address, capacity FROM ngos WHERE approved = 1 ORDER BY name ASC');
+    return res.json({ ngos });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching NGOs.' });
+  }
+});
+
+// Get Volunteer Partners
+router.get('/volunteer-partners', authMiddleware, async (req, res) => {
+  try {
+    const [volunteers] = await pool.query('SELECT id, name, vehicle_type FROM volunteers WHERE user_id != ? ORDER BY name ASC', [req.user.id]);
+    return res.json({ volunteers });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error fetching volunteers.' });
+  }
+});
+
 module.exports = router;

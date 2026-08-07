@@ -13,7 +13,7 @@ const router = express.Router();
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, vehicle_type, vehicle_number } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -38,6 +38,14 @@ router.post('/register', async (req, res) => {
     // admin approval. Do NOT auto-insert an NGO row here — doing so used to
     // create a duplicate, auto-approved, (0,0)-located NGO alongside the
     // real one submitted moments later in the same signup flow.
+
+    // If volunteer, add them to volunteers table
+    if (role === 'volunteer') {
+      await pool.query(
+        'INSERT INTO volunteers (user_id, name, vehicle_type, vehicle_number) VALUES (?, ?, ?, ?)',
+        [result.insertId, name, vehicle_type || 'None', vehicle_number || 'N/A']
+      );
+    }
 
     return res.status(201).json({
       message: 'Account created successfully. Please log in.',

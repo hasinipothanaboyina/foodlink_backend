@@ -145,10 +145,27 @@
 
             <!-- ── OVERVIEW TAB ───────────────────────────────────── -->
             <div id="view-overview" class="admin-view" style="display:block;">
-                <div class="dashboard-header">
+                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <h2 id="ngoWelcomeTitle">NGO Dashboard</h2>
                         <p style="color:var(--text-muted);" id="ngoSubtitle">Loading your organisation data...</p>
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); padding: 1rem 1.5rem; text-align: right; min-width: 250px;">
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <label style="font-weight: 600; color: #b91c1c; margin: 0;">Emergency SOS</label>
+                            <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                                <input type="checkbox" id="sosToggleBtn" style="opacity: 0; width: 0; height: 0;">
+                                <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                                <style>
+                                    .switch input:checked + .slider { background-color: #ef4444; }
+                                    .switch input:focus + .slider { box-shadow: 0 0 1px #ef4444; }
+                                    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+                                    .switch input:checked + .slider:before { transform: translateX(20px); }
+                                </style>
+                            </label>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #991b1b; margin: 0; max-width: 200px; line-height: 1.4;">Activate to alert donors about urgent food shortages.</p>
                     </div>
                 </div>
 
@@ -228,6 +245,7 @@
                                 <th>Donor Phone</th>
                                 <th>Delivery</th>
                                 <th>Address</th>
+                                <th>Expiry Countdown</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -347,6 +365,14 @@
 
             // Nav name
             const ngo = data.ngo || {};
+            window.currentNgoId = ngo.id;
+            
+            // Set SOS Toggle initial state
+            const sosToggleBtn = document.getElementById('sosToggleBtn');
+            if (sosToggleBtn) {
+                sosToggleBtn.checked = !!ngo.is_sos;
+            }
+
             document.getElementById('ngoWelcomeTitle').textContent = ngo.name || 'NGO Dashboard';
             document.getElementById('ngoSubtitle').textContent = `${ngo.city || ''} — Capacity: ${ngo.capacity || '—'} meals`;
             document.getElementById('ngoNameNav').textContent = ngo.name || 'NGO';
@@ -438,17 +464,31 @@
                 <td><a href="tel:${d.donor_phone}" style="color:var(--primary);">${d.donor_phone || '—'}</a></td>
                 <td>${isPickup ? '<span style="color:var(--secondary);font-weight:500;"><i class="fa-solid fa-truck"></i> We Pick Up</span>' : '<span style="color:var(--primary);font-weight:500;"><i class="fa-solid fa-car"></i> Donor Delivers</span>'}</td>
                 <td><a href="${mapUrl}" target="_blank" style="color:var(--primary);font-size:0.85rem;"><i class="fa-solid fa-map-location-dot"></i> View Map</a></td>
+                <td>
+                    ${d.expires_at ? `
+                        <div class="expiry-timer" data-expires="${d.expires_at}" style="font-size: 0.85rem; font-weight: 600; color: #b91c1c; background: rgba(239, 68, 68, 0.1); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.2); white-space: nowrap;">
+                            <i class="fa-solid fa-stopwatch fa-beat-fade"></i> <span class="time-left">Calculating...</span>
+                        </div>
+                    ` : '<span style="color:var(--text-muted);font-size:0.85rem;">N/A</span>'}
+                </td>
                 <td>${statusBadge(d.status)}</td>
                 <td>
                     <div class="action-btn-group" style="flex-direction: column; align-items: flex-start; gap: 0.3rem;">
                         ${d.status === 'matched' ? `
-                        <div style="display:flex; gap:0.3rem;">
-                            <button class="btn btn-primary ngo-accept-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;">
-                                <i class="fa-solid fa-check"></i> Accept
-                            </button>
-                            <button class="btn btn-outline ngo-reject-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;color:#f43f5e;border-color:#f43f5e;">
-                                <i class="fa-solid fa-xmark"></i> Reject
-                            </button>
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; width: 100%;">
+                            <div style="display:flex; gap:0.3rem;">
+                                <button class="btn btn-primary ngo-accept-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;flex:1;justify-content:center;">
+                                    <i class="fa-solid fa-check"></i> Accept
+                                </button>
+                                <button class="btn btn-outline ngo-reject-btn" data-id="${d.id}" style="padding:0.35rem 0.8rem;font-size:0.82rem;color:#f43f5e;border-color:#f43f5e;flex:1;justify-content:center;">
+                                    <i class="fa-solid fa-xmark"></i> Reject
+                                </button>
+                            </div>
+                            ${isPickup ? `
+                            <label style="font-size:0.75rem; display:flex; align-items:center; gap:0.3rem; color:var(--text-muted); cursor:pointer;">
+                                <input type="checkbox" id="req-vol-${d.id}" style="cursor:pointer;"> Need Volunteer Delivery?
+                            </label>
+                            ` : ''}
                         </div>` : `
                         <span style="color:#f59e0b;font-size:0.85rem;"><i class="fa-solid fa-truck-fast"></i> In Transit</span>
                         ${isPickup ? `
@@ -468,10 +508,13 @@
         document.querySelectorAll('.ngo-accept-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
+                const reqVolCheckbox = document.getElementById(`req-vol-${id}`);
+                const needsVolunteer = reqVolCheckbox ? reqVolCheckbox.checked : false;
+
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 try {
-                    const res = await ngoApiCall(`/donations/${id}/accept`, 'PATCH');
+                    const res = await ngoApiCall(`/donations/${id}/accept`, 'PATCH', { needs_volunteer: needsVolunteer });
                     showToast(res.message || 'Donation accepted!', 'success');
                     await loadNGOData();
                 } catch (e) {
@@ -771,6 +814,65 @@
             );
         });
     }
+
+    // ── EXPIRY TIMERS LOGIC ──
+    function setupExpiryTimers() {
+        setInterval(() => {
+            document.querySelectorAll('.expiry-timer').forEach(timer => {
+                const expiresStr = timer.getAttribute('data-expires');
+                if (!expiresStr) return;
+                
+                const expiresAt = new Date(expiresStr).getTime();
+                const now = new Date().getTime();
+                const distance = expiresAt - now;
+
+                const timeLeftSpan = timer.querySelector('.time-left');
+                if (!timeLeftSpan) return;
+
+                if (distance < 0) {
+                    timeLeftSpan.innerHTML = "EXPIRED";
+                    timer.style.color = '#fff';
+                    timer.style.background = '#ef4444';
+                    return;
+                }
+
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                let display = '';
+                if (hours > 0) display += `${hours}h `;
+                display += `${minutes}m ${seconds}s`;
+
+                timeLeftSpan.innerHTML = display;
+                
+                if (distance < 1800000) { // less than 30 mins
+                    timer.style.animation = 'pulse-ring 1s infinite';
+                }
+            });
+        }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setupExpiryTimers();
+        
+        // Setup SOS Toggle
+        const sosToggleBtn = document.getElementById('sosToggleBtn');
+        if (sosToggleBtn) {
+            sosToggleBtn.addEventListener('change', async (e) => {
+                const isSos = e.target.checked;
+                try {
+                    if (!window.currentNgoId) return;
+                    const res = await ngoApiCall(`/ngos/${window.currentNgoId}/sos`, 'PATCH', { is_sos: isSos });
+                    showToast(res.message || 'SOS status updated!', 'success');
+                } catch(err) {
+                    console.error(err);
+                    e.target.checked = !isSos; // revert on fail
+                    showToast('Failed to update SOS status', 'error');
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Registration | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 5% 4rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar glass" id="navbar">
+        <a href="index.html" class="logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 50 C10 80, 90 80, 90 50" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M35 40 Q30 20 40 10" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M55 45 Q50 25 60 15" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <path d="M75 35 Q70 15 80 5" stroke="var(--secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+            FoodLink
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="font-size:0.9rem; color:var(--text-muted);">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="card reveal" style="width:100%; max-width:400px; text-align:center;">
+            <i class="fa-solid fa-person-running" style="font-size:2rem; color:var(--primary); margin-bottom:1rem;"></i>
+            <h2 style="margin-bottom:0.5rem;">Volunteer Registration</h2>
+            <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.95rem;">
+                Join our network to deliver surplus food to NGOs.
+            </p>
+
+            <!-- Error banner -->
+            <div id="registerError" style="display:none; background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.3); border-radius:var(--radius-md); padding:0.75rem 1rem; margin-bottom:1.5rem; color:#f43f5e; font-size:0.87rem; text-align:left;">
+                <i class="fa-solid fa-circle-exclamation"></i> <span id="registerErrorText"></span>
+            </div>
+
+            <form id="volunteerRegisterForm" style="text-align:left;">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" class="form-control" placeholder="John Doe" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Vehicle Type</label>
+                    <select id="vehicleType" class="form-control" required>
+                        <option value="Bike">Bike</option>
+                        <option value="Scooter">Scooter</option>
+                        <option value="Car">Car</option>
+                        <option value="Van">Van / Truck</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Vehicle Registration Number</label>
+                    <input type="text" id="vehicleNumber" class="form-control" placeholder="AP 16 AB 1234" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position:relative;">
+                        <input type="password" id="password" class="form-control"
+                            placeholder="••••••••" required style="padding-right:3rem;">
+                        <button type="button" id="togglePassword"
+                            style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.9rem;">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="registerBtn" class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom:1rem; padding:1rem;">
+                    Sign Up <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+                <div style="text-align:center; font-size:0.9rem; color:var(--text-muted);">
+                    Already have an account?
+                    <a href="auth.html" style="color:var(--primary); text-decoration:none; font-weight:600;">
+                        Login
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Password show/hide
+        document.getElementById('togglePassword').addEventListener('click', () => {
+            const input = document.getElementById('password');
+            const icon = document.querySelector('#togglePassword i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        });
+
+        document.getElementById('volunteerRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('registerBtn');
+            const errBox = document.getElementById('registerError');
+            const errTxt = document.getElementById('registerErrorText');
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const vehicle_type = document.getElementById('vehicleType').value;
+            const vehicle_number = document.getElementById('vehicleNumber').value.trim();
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registering...';
+            errBox.style.display = 'none';
+
+            try {
+                const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role: 'volunteer', vehicle_type, vehicle_number })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    // Auto login
+                    const loginRes = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const loginData = await loginRes.json();
+                    
+                    if (loginRes.ok) {
+                        localStorage.setItem('foodlink_token', loginData.token);
+                        localStorage.setItem('foodlink_user', JSON.stringify(loginData.user));
+                        window.location.href = 'volunteer-dashboard.html';
+                    } else {
+                        window.location.href = 'auth.html';
+                    }
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            } catch (err) {
+                errTxt.textContent = err.message || 'Cannot connect to server.';
+                errBox.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Sign Up <i class="fa-solid fa-arrow-right"></i>';
+            }
+        });
+    </script>
+</body>
+</html>

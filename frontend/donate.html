@@ -108,6 +108,20 @@
                     </div>
                 </div>
 
+                <div class="form-group" style="margin-top: 2rem; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid #86efac; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);">
+                    <label style="margin-bottom: 0.5rem; color: #166534; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-robot"></i> AI Smart Matching</label>
+                    <p style="font-size: 0.85rem; color: #15803d; margin-bottom: 1rem;">You can let our AI find the best NGO automatically when you submit, OR you can ask AI to suggest one right now and optionally lock it in.</p>
+                    <div style="display: flex; gap: 1rem; align-items: stretch; flex-wrap: wrap;">
+                        <button type="button" id="aiRecommendBtn" class="btn btn-primary" style="background: #22c55e; border-color: #22c55e; white-space: nowrap; box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
+                            <i class="fa-solid fa-bolt"></i> Suggest Best NGO
+                        </button>
+                        <div style="flex: 1; min-width: 200px;">
+                            <input type="text" id="targetNgoName" class="form-control" placeholder="AI suggestion will appear here" readonly style="background: rgba(255,255,255,0.7); border-color: #bbf7d0;">
+                            <input type="hidden" id="targetNgoId" name="targetNgoId">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group" style="margin-top: 2rem;">
                     <label style="margin-bottom: 1rem;" data-i18n="don_delivery">How will the food reach the NGO?</label>
                     <div class="radio-card-grid">
@@ -272,6 +286,58 @@
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => document.querySelector('.reveal')?.classList.add('active'), 100);
         });
+
+        // AI Recommendation Logic
+        const aiRecommendBtn = document.getElementById('aiRecommendBtn');
+        const targetNgoName = document.getElementById('targetNgoName');
+        const targetNgoId = document.getElementById('targetNgoId');
+
+        if (aiRecommendBtn) {
+            aiRecommendBtn.addEventListener('click', async () => {
+                const foodType = document.getElementById('foodType').value;
+                const quantity = parseInt(document.getElementById('quantity').value) || 0;
+                const city = document.getElementById('city').value;
+                const lat = window.donationCoords.lat || 16.5062;
+                const lng = window.donationCoords.lng || 80.6480;
+
+                if (!foodType || !quantity || !city) {
+                    alert('Please select Food Type, Quantity, and City first so the AI can match you accurately!');
+                    return;
+                }
+
+                aiRecommendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Thinking...';
+                aiRecommendBtn.disabled = true;
+
+                try {
+                    const res = await fetch(`${API_BASE}/donations/recommend`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ food_type: foodType, quantity, city, latitude: lat, longitude: lng })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.ngo) {
+                        targetNgoName.value = `${data.ngo.name} (${Number(data.distance).toFixed(1)} km away)`;
+                        targetNgoId.value = data.ngo.id;
+                        targetNgoName.style.borderColor = '#22c55e';
+                        targetNgoName.style.background = '#f0fdf4';
+                        
+                        // Suggest changing to dropoff if close
+                        if (data.distance < 5) {
+                            document.querySelector('input[value="donor_delivers"]').checked = true;
+                        }
+                    } else {
+                        targetNgoName.value = 'No match found. Please try later.';
+                        targetNgoId.value = '';
+                    }
+                } catch (err) {
+                    alert('AI Service unavailable.');
+                } finally {
+                    aiRecommendBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Suggest Best NGO';
+                    aiRecommendBtn.disabled = false;
+                }
+            });
+        }
 
         // Donation form submit
         const donationForm = document.getElementById('donationForm');
