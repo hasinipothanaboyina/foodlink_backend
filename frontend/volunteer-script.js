@@ -98,13 +98,28 @@ async function loadOverview() {
             document.getElementById('pdVehicleType').textContent = v.vehicle_type || '-';
             document.getElementById('pdVehicleNumber').textContent = v.vehicle_number || '-';
             
-            // Photo
-            const photoEl = document.getElementById('volPhoto');
+            // Photo (Top Nav and Personal Details)
+            const navPhotoEl = document.getElementById('volPhoto');
+            const navInitEl = document.getElementById('volInitials');
+            const pdPhotoEl = document.getElementById('pdPhoto');
+            const pdInitEl = document.getElementById('pdInitials');
+            
             if (v.photo_url) {
                 const API_ORIGIN = window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
-                photoEl.src = `${API_ORIGIN}${v.photo_url}`;
-                photoEl.style.display = 'block';
-                document.getElementById('volInitials').style.display = 'none';
+                const photoSrc = `${API_ORIGIN}${v.photo_url}`;
+                navPhotoEl.src = photoSrc;
+                navPhotoEl.style.display = 'block';
+                navInitEl.style.display = 'none';
+                
+                pdPhotoEl.src = photoSrc;
+                pdPhotoEl.style.display = 'block';
+                pdInitEl.style.display = 'none';
+            } else {
+                navPhotoEl.style.display = 'none';
+                navInitEl.style.display = 'flex';
+                
+                pdPhotoEl.style.display = 'none';
+                pdInitEl.style.display = 'flex';
             }
         }
 
@@ -146,19 +161,36 @@ document.getElementById('editProfileForm')?.addEventListener('submit', async (e)
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
 
-    const updates = {
-        city: document.getElementById('editCity').value,
-        age: document.getElementById('editAge').value,
-        gender: document.getElementById('editGender').value,
-        vehicle_type: document.getElementById('editVehicleType').value,
-        vehicle_number: document.getElementById('editVehicleNumber').value
-    };
+    const formData = new FormData();
+    formData.append('city', document.getElementById('editCity').value);
+    formData.append('age', document.getElementById('editAge').value);
+    formData.append('gender', document.getElementById('editGender').value);
+    formData.append('vehicle_type', document.getElementById('editVehicleType').value);
+    formData.append('vehicle_number', document.getElementById('editVehicleNumber').value);
+    
+    const photoFile = document.getElementById('editPhoto').files[0];
+    if (photoFile) {
+        formData.append('photo', photoFile);
+    }
 
     try {
-        const res = await volApiCall('/volunteers/me', 'PATCH', updates);
-        showToast(res.message, 'success');
+        const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+        const res = await fetch(`${API_BASE}/volunteers/me`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'API Error');
+
+        showToast(data.message, 'success');
         document.getElementById('editProfileModal').style.display = 'none';
-        loadOverview(); // reload details
+        
+        // Update user photo in localStorage if needed, or just reload overview
+        loadOverview(); 
     } catch (err) {
         showToast(err.message || 'Failed to save changes.', 'error');
     } finally {

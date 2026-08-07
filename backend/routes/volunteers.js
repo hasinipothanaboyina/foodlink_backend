@@ -1,8 +1,21 @@
 const express = require('express');
 const pool = require('../db/connection');
 const authMiddleware = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
+
+// Configure multer storage for volunteer photos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '..', 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 // Register a volunteer
 router.post('/register', authMiddleware, async (req, res) => {
@@ -36,8 +49,10 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // Update volunteer details
-router.patch('/me', authMiddleware, async (req, res) => {
+router.patch('/me', authMiddleware, upload.single('photo'), async (req, res) => {
   const { city, age, gender, vehicle_type, vehicle_number } = req.body;
+  const photo_url = req.file ? `/uploads/${req.file.filename}` : null;
+  
   try {
     const updates = [];
     const values = [];
@@ -46,6 +61,7 @@ router.patch('/me', authMiddleware, async (req, res) => {
     if (gender !== undefined) { updates.push('gender = ?'); values.push(gender); }
     if (vehicle_type !== undefined) { updates.push('vehicle_type = ?'); values.push(vehicle_type); }
     if (vehicle_number !== undefined) { updates.push('vehicle_number = ?'); values.push(vehicle_number); }
+    if (photo_url) { updates.push('photo_url = ?'); values.push(photo_url); }
 
     if (updates.length === 0) return res.status(400).json({ message: 'No fields to update.' });
 
