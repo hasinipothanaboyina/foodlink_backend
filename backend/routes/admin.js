@@ -32,10 +32,10 @@ router.get('/stats', async (req, res) => {
       "SELECT COALESCE(SUM(quantity), 0) AS total FROM donations WHERE status != 'cancelled'"
     );
     const [[volunteersCount]] = await pool.query(
-      "SELECT COUNT(*) AS total FROM users WHERE role='volunteer'"
+      "SELECT COUNT(*) AS total FROM volunteers"
     );
     const [[volunteerTasks]] = await pool.query(
-      "SELECT COUNT(*) AS total FROM donations WHERE delivery_method='volunteer' AND status != 'pending' AND status != 'cancelled'"
+      "SELECT COUNT(DISTINCT ngo_id) AS total FROM donations WHERE delivery_method='volunteer' AND status != 'pending' AND status != 'cancelled'"
     );
 
     return res.json({
