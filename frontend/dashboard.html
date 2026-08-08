@@ -938,7 +938,7 @@
                 const isSos = e.target.checked;
                 try {
                     if (!window.currentNgoId) return;
-                    const res = await ngoApiCall(`/ngos/${window.currentNgoId}/sos`, 'PATCH', { is_sos: isSos });
+                    const res = await ngoApiCall(`/ngos/sos`, 'PATCH', { is_sos: isSos });
                     showToast(res.message || 'SOS status updated!', 'success');
                 } catch(err) {
                     console.error(err);
