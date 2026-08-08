@@ -237,7 +237,7 @@ router.post('/public', async (req, res) => {
     return res.status(201).json({ message: 'Donation submitted successfully.', donationId, matchedNGO });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error while submitting donation.' });
+    return res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 
@@ -318,7 +318,7 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.status(201).json({ message: 'Donation submitted successfully.', donationId, matchedNGO });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error while submitting donation.' });
+    return res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
 
