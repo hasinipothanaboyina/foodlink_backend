@@ -69,6 +69,7 @@ const pool = require('./db/connection');
 async function runMigrations() {
   console.log('Running auto-migrations on startup...');
   const queries = [
+    "ALTER TABLE donations MODIFY delivery_method VARCHAR(100) DEFAULT 'donor_delivers'",
     "ALTER TABLE volunteers ADD COLUMN vehicle_type VARCHAR(100)",
     "ALTER TABLE volunteers ADD COLUMN vehicle_number VARCHAR(100)",
     "ALTER TABLE volunteers ADD COLUMN earnings DECIMAL(10,2) DEFAULT 0.00",
