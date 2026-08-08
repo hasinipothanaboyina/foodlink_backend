@@ -43,6 +43,13 @@ async function loadAdminStats() {
     document.getElementById('statNgos').textContent = stats.approvedNgos.toLocaleString();
     document.getElementById('statPendingNgos').textContent = stats.pendingNgos.toLocaleString();
     document.getElementById('statFailed').textContent = stats.failedMatches.toLocaleString();
+    
+    // New volunteer stats
+    const volEl = document.getElementById('statVolunteers');
+    if (volEl) volEl.textContent = stats.totalVolunteers != null ? stats.totalVolunteers.toLocaleString() : '—';
+    
+    const workEl = document.getElementById('statVolunteerWork');
+    if (workEl) workEl.textContent = stats.activeVolunteerTasks != null ? stats.activeVolunteerTasks.toLocaleString() : '—';
 
     document.getElementById('adminSubtitle').textContent =
       `Live data — ${stats.totalDonations.toLocaleString()} total donations processed.`;

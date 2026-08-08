@@ -31,6 +31,12 @@ router.get('/stats', async (req, res) => {
     const [[mealsTotal]] = await pool.query(
       "SELECT COALESCE(SUM(quantity), 0) AS total FROM donations WHERE status != 'cancelled'"
     );
+    const [[volunteersCount]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM users WHERE role='volunteer'"
+    );
+    const [[volunteerTasks]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM donations WHERE delivery_method='volunteer' AND status != 'pending' AND status != 'cancelled'"
+    );
 
     return res.json({
       totalUsers: userCount.total,
@@ -39,6 +45,8 @@ router.get('/stats', async (req, res) => {
       totalDonations: donationCount.total,
       failedMatches: failedCount.total,
       totalMealsDonated: mealsTotal.total,
+      totalVolunteers: volunteersCount.total,
+      activeVolunteerTasks: volunteerTasks.total
     });
   } catch (err) {
     console.error(err);
