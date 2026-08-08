@@ -34,6 +34,8 @@ const translations = {
     del_dropoff_desc: 'Show me where to go. Fastest option.',
     del_pickup: 'NGO must pick it up',
     del_pickup_desc: 'I need someone to come get it.',
+    del_volunteer: 'Volunteer pick up',
+    del_volunteer_desc: 'Assign a volunteer to transport it.',
     
     res_title: 'Match Found!',
     btn_submit_ngo: 'Submit Application',
@@ -71,6 +73,8 @@ const translations = {
     del_dropoff_desc: 'నేను ఎక్కడికి వెళ్లాలో చూపించండి. వేగవంతమైన ఎంపిక.',
     del_pickup: 'NGO పిక్ అప్ చేసుకోవాలి',
     del_pickup_desc: 'ఎవరైనా వచ్చి తీసుకోవాలి.',
+    del_volunteer: 'వాలంటీర్ పిక్ అప్',
+    del_volunteer_desc: 'తీసుకెళ్లడానికి వాలంటీర్‌ను కేటాయించండి.',
     
     res_title: 'సరిపోలిక కనుగొనబడింది!',
     btn_submit_ngo: 'దరఖాస్తు సమర్పించండి',
