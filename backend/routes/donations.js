@@ -145,21 +145,27 @@ async function findBestNGO(donation, excludeIds = []) {
 // ─── IMPACT DASHBOARD STATS ──────────────────────────────────────────────────
 router.get('/my-stats', authMiddleware, async (req, res) => {
   try {
-    let whereClause = "WHERE user_id = ? AND status = 'completed'";
-    const params = [req.user.id];
+    let whereClause = "WHERE status = 'completed'";
+    const params = [];
 
-    if (req.user.role === 'donor') {
-      whereClause = "WHERE donor_phone = ? AND status = 'completed'";
-      params[0] = req.user.phone;
+    if (req.user.role === 'donor' && req.user.phone) {
+      whereClause += " AND donor_phone = ?";
+      params.push(req.user.phone);
+    } else {
+      whereClause += " AND user_id = ?";
+      params.push(req.user.id);
     }
 
-    const [rows] = await pool.query(
-      `SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations ${whereClause}`,
-      params
-    );
-    const stats = rows[0];
-    const totalKg = stats.totalKg || 0;
-    const totalDonations = stats.totalDonations || 0;
+    const [rows] = await pool.query(`SELECT quantity FROM donations ${whereClause}`, params);
+    
+    let totalKg = 0;
+    for (const row of rows) {
+      const match = String(row.quantity).match(/^(\d+(\.\d+)?)/);
+      if (match) {
+        totalKg += parseFloat(match[1]);
+      }
+    }
+    const totalDonations = rows.length;
     const mealsProvided = totalKg * 3; // Approx 3 meals per kg
     const co2Saved = totalKg * 2.5; // Approx 2.5kg CO2 saved per kg of food
     
@@ -341,7 +347,7 @@ router.get('/my', authMiddleware, async (req, res) => {
     let whereClause = '';
     const params = [];
     
-    if (req.user.role === 'donor') {
+    if (req.user.role === 'donor' && req.user.phone) {
       whereClause = 'WHERE d.donor_phone = ?';
       params.push(req.user.phone);
     } else {
