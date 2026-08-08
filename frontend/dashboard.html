@@ -444,6 +444,7 @@
             const statusSelect = document.getElementById('ngoAvailability');
             if (statusSelect && ngo.availability_status) {
                 statusSelect.value = ngo.availability_status;
+                statusSelect.dataset.previousValue = ngo.availability_status;
                 updateStatusDropdownStyles(statusSelect);
             }
 
@@ -789,11 +790,13 @@
         // Availability Toggle
         document.getElementById('ngoAvailability')?.addEventListener('change', async (e) => {
             const selectEl = e.target;
+            const previousValue = selectEl.dataset.previousValue || 'active';
             updateStatusDropdownStyles(selectEl);
 
             try {
                 const res = await ngoApiCall('/ngos/status', 'PATCH', { status: selectEl.value });
                 showToast(`Status updated to ${selectEl.value.toUpperCase()}`);
+                selectEl.dataset.previousValue = selectEl.value;
                 
                 // Immediately re-fetch the network list if the user is on the Network tab
                 if (document.getElementById('tab-network')?.classList.contains('active')) {
@@ -801,6 +804,8 @@
                 }
             } catch(err) {
                 showToast(err.message || 'Failed to update status. Check server logs.', 'error');
+                selectEl.value = previousValue;
+                updateStatusDropdownStyles(selectEl);
             }
         });
 

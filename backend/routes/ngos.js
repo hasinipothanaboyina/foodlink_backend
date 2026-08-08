@@ -148,13 +148,14 @@ router.patch('/status', authMiddleware, async (req, res) => {
     return res.status(400).json({ message: 'Invalid status.' });
   }
   try {
-    const [result] = await pool.query(
+    const [check] = await pool.query('SELECT id FROM ngos WHERE user_id = ?', [req.user.id]);
+    if (check.length === 0) {
+      return res.status(404).json({ message: 'NGO not found for this user.' });
+    }
+    await pool.query(
       'UPDATE ngos SET availability_status = ? WHERE user_id = ?',
       [status, req.user.id]
     );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'NGO not found for this user.' });
-    }
     return res.json({ message: 'Status updated successfully.' });
   } catch (err) {
     console.error(err);
