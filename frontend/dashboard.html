@@ -133,6 +133,7 @@
                 <li><a href="#" id="tab-overview" class="active"><i class="fa-solid fa-chart-line"></i> Overview</a></li>
                 <li><a href="#" id="tab-incoming"><i class="fa-solid fa-bell"></i> Incoming Donations <span id="incomingBadge" style="display:none;background:#f43f5e;color:white;border-radius:999px;padding:0.1rem 0.5rem;font-size:0.72rem;margin-left:0.3rem;">0</span></a></li>
                 <li><a href="#" id="tab-history"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li><a href="#" id="tab-report"><i class="fa-solid fa-triangle-exclamation"></i> Report Issue</a></li>
                 <li style="margin-top:2rem;">
                     <a href="#" id="tab-network" class="btn btn-outline" style="justify-content:center;">
                         <i class="fa-solid fa-handshake"></i> NGO Network
@@ -310,6 +311,38 @@
                 <div id="ngoCardsGrid">
                     <!-- NGO cards rendered here -->
                 </div>
+            </div>
+
+            <!-- ── REPORT ISSUE TAB ────────────────────────────────────── -->
+            <div id="view-report" class="admin-view" style="display:none; max-width: 600px;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Report an Issue</h2>
+                        <p style="color:var(--text-muted);">Let the admin know if you are facing any problems.</p>
+                    </div>
+                </div>
+                <form id="reportIssueForm" style="display:flex; flex-direction:column; gap:1.2rem;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Category</label>
+                        <select id="issueCategory" class="input" required style="width:100%;">
+                            <option value="App Bug">App Bug</option>
+                            <option value="Donation Issue">Donation Issue</option>
+                            <option value="Account">Account</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Description</label>
+                        <textarea id="issueDescription" class="input" rows="4" placeholder="Describe your issue in detail..." required style="width:100%; resize:vertical;"></textarea>
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Photo (Optional)</label>
+                        <input type="file" id="issuePhoto" accept="image/*" class="input" style="width:100%; padding:0.4rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitIssueBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Report
+                    </button>
+                </form>
             </div>
 
         </main>
@@ -719,7 +752,7 @@
             }
         });
 
-        const tabs = ['overview', 'incoming', 'history', 'network'];
+        const tabs = ['overview', 'incoming', 'history', 'network', 'report'];
         tabs.forEach(tab => {
             const el = document.getElementById(`tab-${tab}`);
             if (!el) return;
@@ -768,6 +801,45 @@
                 }
             } catch(err) {
                 showToast(err.message || 'Failed to update status. Check server logs.', 'error');
+            }
+        });
+
+        // ── REPORT ISSUE LOGIC ──
+        document.getElementById('reportIssueForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitIssueBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const formData = new FormData();
+                formData.append('category', document.getElementById('issueCategory').value);
+                formData.append('description', document.getElementById('issueDescription').value);
+                
+                const photoInput = document.getElementById('issuePhoto');
+                if (photoInput.files.length > 0) {
+                    formData.append('photo', photoInput.files[0]);
+                }
+
+                // Use fetch directly for FormData to avoid Content-Type JSON headers in ngoApiCall
+                const res = await fetch(`${NGO_API}/issues/report`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${getToken()}` },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed to submit report');
+                
+                showToast(data.message || 'Issue reported successfully!', 'success');
+                document.getElementById('reportIssueForm').reset();
+                document.getElementById('tab-overview').click(); // Go back to overview
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
             }
         });
     });

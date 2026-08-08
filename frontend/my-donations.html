@@ -71,13 +71,15 @@
     <div class="dashboard-layout">
         <aside class="sidebar" id="sidebar">
             <ul class="sidebar-menu">
-                <li><a href="my-donations.html" class="active"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
+                <li><a href="my-donations.html" id="tab-donations" class="active"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
                 <li><a href="donate.html"><i class="fa-solid fa-hand-holding-heart"></i> Donate Again</a></li>
                 <li><a href="trackdonation.html"><i class="fa-solid fa-truck-fast"></i> Track by Phone</a></li>
+                <li><a href="#" id="tab-report"><i class="fa-solid fa-triangle-exclamation"></i> Report Issue</a></li>
                 <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
             </ul>
         </aside>
         <main class="main-content">
+            <div id="view-donations">
             <div class="dashboard-header">
                 <div>
                     <h2>My Donations</h2>
@@ -166,6 +168,39 @@
 
             <!-- Pagination -->
             <div id="paginationControls" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+            </div>
+            </div>
+
+            <!-- REPORT ISSUE VIEW -->
+            <div id="view-report" style="display:none; max-width: 600px;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Report an Issue</h2>
+                        <p style="color:var(--text-muted);">Let the admin know if you are facing any problems.</p>
+                    </div>
+                </div>
+                <form id="reportIssueForm" style="display:flex; flex-direction:column; gap:1.2rem;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Category</label>
+                        <select id="issueCategory" class="input" required style="width:100%; padding: 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                            <option value="App Bug">App Bug</option>
+                            <option value="Donation Issue">Donation Issue</option>
+                            <option value="Account">Account</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Description</label>
+                        <textarea id="issueDescription" class="input" rows="4" placeholder="Describe your issue in detail..." required style="width:100%; padding: 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border); resize:vertical;"></textarea>
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Photo (Optional)</label>
+                        <input type="file" id="issuePhoto" accept="image/*" class="input" style="width:100%; padding:0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitIssueBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Report
+                    </button>
+                </form>
             </div>
         </main>
     </div>

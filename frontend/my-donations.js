@@ -230,4 +230,67 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = 'index.html';
     });
   }
+
+  // Report Issue Logic
+  const tabDonations = document.getElementById('tab-donations');
+  const tabReport = document.getElementById('tab-report');
+  const viewDonations = document.getElementById('view-donations');
+  const viewReport = document.getElementById('view-report');
+
+  if(tabReport && viewReport) {
+      tabReport.addEventListener('click', (e) => {
+          e.preventDefault();
+          tabDonations.classList.remove('active');
+          tabReport.classList.add('active');
+          viewDonations.style.display = 'none';
+          viewReport.style.display = 'block';
+      });
+
+      tabDonations.addEventListener('click', (e) => {
+          e.preventDefault();
+          tabReport.classList.remove('active');
+          tabDonations.classList.add('active');
+          viewReport.style.display = 'none';
+          viewDonations.style.display = 'block';
+      });
+
+      document.getElementById('reportIssueForm')?.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('submitIssueBtn');
+          const originalHtml = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+          try {
+              const formData = new FormData();
+              formData.append('category', document.getElementById('issueCategory').value);
+              formData.append('description', document.getElementById('issueDescription').value);
+              
+              const photoInput = document.getElementById('issuePhoto');
+              if (photoInput.files.length > 0) {
+                  formData.append('photo', photoInput.files[0]);
+              }
+
+              const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+              const token = localStorage.getItem('foodlink_token');
+              const res = await fetch(`${API_BASE}/issues/report`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${token}` },
+                  body: formData
+              });
+              
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.message || 'Failed to submit report');
+              
+              alert(data.message || 'Issue reported successfully!');
+              document.getElementById('reportIssueForm').reset();
+              tabDonations.click();
+          } catch (err) {
+              alert(err.message);
+          } finally {
+              btn.disabled = false;
+              btn.innerHTML = originalHtml;
+          }
+      });
+  }
 });

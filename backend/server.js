@@ -34,6 +34,7 @@ app.use('/api/ngos',      ngoRoutes);
 app.use('/api/admin',     adminRoutes);
 app.use('/api/donor-auth', donorAuthRoutes);
 app.use('/api/volunteers', require('./routes/volunteers'));
+app.use('/api/issues', require('./routes/issues'));
 
 // ── DISASTER RELIEF MODE ──
 let DISASTER_MODE_ACTIVE = false;
@@ -78,6 +79,7 @@ async function runMigrations() {
     "ALTER TABLE volunteers ADD COLUMN photo_url VARCHAR(255) NULL",
     "ALTER TABLE volunteers MODIFY phone VARCHAR(20) NULL",
     "ALTER TABLE volunteers MODIFY city VARCHAR(100) NULL",
+    "ALTER TABLE reported_issues ADD COLUMN photo_url VARCHAR(255) NULL",
     `CREATE TABLE IF NOT EXISTS volunteer_feedback (
       id INT AUTO_INCREMENT PRIMARY KEY,
       volunteer_id INT NOT NULL,

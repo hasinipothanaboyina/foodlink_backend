@@ -457,12 +457,18 @@ async function loadIssues() {
       return;
     }
 
-    tbody.innerHTML = issues.map((i) => `
+    tbody.innerHTML = issues.map((i) => {
+      let photoHtml = '';
+      if (i.photo_url) {
+          const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+          photoHtml = `<br><a href="${API_BASE}${i.photo_url}" target="_blank" style="font-size:0.8rem; color:var(--primary); text-decoration:none;"><i class="fa-solid fa-image"></i> View Photo</a>`;
+      }
+      return `
       <tr style="border-color: #334155;" id="issue-row-${i.id}">
         <td>#ISSUE-${i.id}</td>
         <td>${i.reported_by}</td>
         <td>${i.category}</td>
-        <td>${i.description}</td>
+        <td>${i.description} ${photoHtml}</td>
         <td id="issue-status-${i.id}">
           <span style="color: ${i.status === 'open' ? '#f43f5e' : '#10b981'}; font-weight:600;">
             ${i.status === 'open' ? '⚠️ OPEN' : '✅ RESOLVED'}
@@ -477,7 +483,8 @@ async function loadIssues() {
           }
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
 
     // Attach resolve button handlers — calls real backend API to save in DB
     document.querySelectorAll('.resolve-issue-btn').forEach((btn) => {

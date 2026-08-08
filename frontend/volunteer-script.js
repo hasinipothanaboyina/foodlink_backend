@@ -10,20 +10,26 @@ const tabOverview = document.getElementById('tab-overview');
 const tabDeliveries = document.getElementById('tab-deliveries');
 const tabNgoNetwork = document.getElementById('tab-ngo-network');
 const tabVolNetwork = document.getElementById('tab-vol-network');
+const tabReport = document.getElementById('tab-report');
 
 // Sections
 const secOverview = document.getElementById('section-overview');
 const secDeliveries = document.getElementById('section-deliveries');
 const secNgoNetwork = document.getElementById('section-ngo-network');
 const secVolNetwork = document.getElementById('section-vol-network');
+const secReport = document.getElementById('section-report');
 const pageTitle = document.getElementById('pageTitle');
 
 function showSection(section, title, activeTab) {
-    [secOverview, secDeliveries, secNgoNetwork, secVolNetwork].forEach(s => s.style.display = 'none');
-    [tabOverview, tabDeliveries, tabNgoNetwork, tabVolNetwork].forEach(t => t.classList.remove('active'));
+    [secOverview, secDeliveries, secNgoNetwork, secVolNetwork, secReport].forEach(s => {
+        if(s) s.style.display = 'none';
+    });
+    [tabOverview, tabDeliveries, tabNgoNetwork, tabVolNetwork, tabReport].forEach(t => {
+        if(t) t.classList.remove('active');
+    });
     
-    section.style.display = 'block';
-    activeTab.classList.add('active');
+    if(section) section.style.display = 'block';
+    if(activeTab) activeTab.classList.add('active');
     pageTitle.textContent = title;
 }
 
@@ -31,6 +37,7 @@ tabOverview.addEventListener('click', (e) => { e.preventDefault(); showSection(s
 tabDeliveries.addEventListener('click', (e) => { e.preventDefault(); showSection(secDeliveries, 'Deliveries', tabDeliveries); loadDeliveries(); });
 tabNgoNetwork.addEventListener('click', (e) => { e.preventDefault(); showSection(secNgoNetwork, 'NGO Partners', tabNgoNetwork); loadNgoNetwork(); });
 tabVolNetwork.addEventListener('click', (e) => { e.preventDefault(); showSection(secVolNetwork, 'Volunteer Partners', tabVolNetwork); loadVolNetwork(); });
+if(tabReport) tabReport.addEventListener('click', (e) => { e.preventDefault(); showSection(secReport, 'Report Issue', tabReport); });
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,6 +54,45 @@ document.getElementById('volLogoutBtn').addEventListener('click', (e) => {
     e.preventDefault();
     localStorage.clear();
     window.location.href = 'index.html';
+});
+
+// Report Issue
+document.getElementById('reportIssueForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitIssueBtn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const formData = new FormData();
+        formData.append('category', document.getElementById('issueCategory').value);
+        formData.append('description', document.getElementById('issueDescription').value);
+        
+        const photoInput = document.getElementById('issuePhoto');
+        if (photoInput.files.length > 0) {
+            formData.append('photo', photoInput.files[0]);
+        }
+
+        const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+        const res = await fetch(`${API_BASE}/issues/report`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to submit report');
+        
+        showToast(data.message || 'Issue reported successfully!', 'success');
+        document.getElementById('reportIssueForm').reset();
+        tabOverview.click();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
 });
 
 // Helper for authorized API calls
