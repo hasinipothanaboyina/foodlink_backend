@@ -428,7 +428,7 @@ router.get('/ngo-incoming', authMiddleware, async (req, res) => {
     // The user registered the NGO under a different email account than the one they are currently logged into!
     // We will forcibly re-assign the NGO to the currently logged-in account so they can see it.
     if (ngoRows.length === 0) {
-      await pool.query('UPDATE ngos SET user_id = ? WHERE name LIKE "%karla%"', [req.user.id]);
+      await pool.query('UPDATE ngos SET user_id = ? WHERE name LIKE \'%karla%\'', [req.user.id]);
       [ngoRows] = await pool.query('SELECT * FROM ngos WHERE user_id = ?', [req.user.id]);
     }
 
