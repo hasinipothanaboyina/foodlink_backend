@@ -141,6 +141,14 @@
                                 <span data-i18n="del_pickup_desc">I need someone to come get it.</span>
                             </div>
                         </label>
+                        <label class="radio-card">
+                            <input type="radio" name="deliveryMethod" value="volunteer">
+                            <div class="radio-content">
+                                <i class="fa-solid fa-person-running"></i>
+                                <strong data-i18n="del_volunteer">Volunteer pick up</strong>
+                                <span data-i18n="del_volunteer_desc">Assign a volunteer to transport it.</span>
+                            </div>
+                        </label>
                     </div>
                 </div>
 
@@ -393,22 +401,35 @@
                             document.getElementById('resNgoDist').textContent = data.matchedNGO.distance + ' km';
 
                             const isDropoff = deliveryMethod === 'donor_delivers';
-                            document.getElementById('matchDesc').textContent = isDropoff
-                                ? "We've alerted them you are on your way!"
-                                : "We've alerted them to pick it up!";
+                            const isVolunteer = deliveryMethod === 'volunteer';
+                            
+                            if (isDropoff) {
+                                document.getElementById('matchDesc').textContent = "We've alerted them you are on your way!";
+                            } else if (isVolunteer) {
+                                document.getElementById('matchDesc').textContent = "We're assigning a volunteer to pick it up!";
+                            } else {
+                                document.getElementById('matchDesc').textContent = "We've alerted them to pick it up!";
+                            }
 
                             // Use exact GPS coordinates for driving directions instead of a text search
                             const mapUrl = (data.matchedNGO.latitude && data.matchedNGO.longitude)
                                 ? `https://www.google.com/maps/dir/?api=1&destination=${data.matchedNGO.latitude},${data.matchedNGO.longitude}`
                                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.matchedNGO.name + ' ' + (data.matchedNGO.address || ''))}`;
 
-                            document.getElementById('resInstruction').innerHTML = isDropoff
-                                ? `<i class="fa-solid fa-map"></i> Deliver to:<br>
+                            if (isDropoff) {
+                                document.getElementById('resInstruction').innerHTML = 
+                                   `<i class="fa-solid fa-map"></i> Deliver to:<br>
                                    <span style="font-weight:400; color:var(--text-muted);">${data.matchedNGO.address || 'Address provided on contact'}</span><br>
                                    <a href="${mapUrl}" target="_blank" class="btn btn-outline" style="margin-top:1rem; padding:0.5rem 1rem; display:inline-flex; font-size:0.85rem;">
                                        <i class="fa-solid fa-location-arrow"></i> Get Directions
-                                   </a>`
-                                : `<i class="fa-solid fa-phone"></i> They will call you at <strong>${donorPhone}</strong> shortly.`;
+                                   </a>`;
+                            } else if (isVolunteer) {
+                                document.getElementById('resInstruction').innerHTML = 
+                                   `<i class="fa-solid fa-person-running"></i> A volunteer will call you at <strong>${donorPhone}</strong> before arriving.`;
+                            } else {
+                                document.getElementById('resInstruction').innerHTML = 
+                                   `<i class="fa-solid fa-phone"></i> They will call you at <strong>${donorPhone}</strong> shortly.`;
+                            }
                         } else {
                             document.getElementById('matchDesc').innerHTML = "<span style='color: #f43f5e;'><i class='fa-solid fa-triangle-exclamation'></i> No Immediate Match</span>";
                             document.getElementById('resNgoName').textContent = "All Nearby NGOs are Full";
