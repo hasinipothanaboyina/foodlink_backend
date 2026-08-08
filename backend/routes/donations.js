@@ -476,7 +476,7 @@ router.get('/ngo-incoming', authMiddleware, async (req, res) => {
     );
 
     return res.json({
-      ngo: { id: ngo.id, name: ngo.name, city: ngo.city, address: ngo.address, capacity: ngo.capacity, availability_status: ngo.availability_status },
+      ngo: { id: ngo.id, name: ngo.name, city: ngo.city, address: ngo.address, capacity: ngo.capacity, availability_status: ngo.availability_status, is_sos: ngo.is_sos },
       stats: { totalMeals, totalDonations, completedDonations, pendingDonations },
       donations: donationsList,
     });

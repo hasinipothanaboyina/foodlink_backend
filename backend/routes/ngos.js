@@ -166,13 +166,14 @@ router.patch('/status', authMiddleware, async (req, res) => {
 router.patch('/sos', authMiddleware, async (req, res) => {
   const { is_sos } = req.body;
   try {
-    const [result] = await pool.query(
+    const [check] = await pool.query('SELECT id FROM ngos WHERE user_id = ?', [req.user.id]);
+    if (check.length === 0) {
+      return res.status(404).json({ message: 'NGO not found for this user.' });
+    }
+    await pool.query(
       'UPDATE ngos SET is_sos = ? WHERE user_id = ?',
       [is_sos ? 1 : 0, req.user.id]
     );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'NGO not found for this user.' });
-    }
     return res.json({ message: `SOS mode ${is_sos ? 'activated' : 'deactivated'}.` });
   } catch (err) {
     console.error(err);
