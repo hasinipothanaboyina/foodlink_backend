@@ -153,6 +153,17 @@ async function loadOverview() {
             if (v.photo_url) {
                 const API_ORIGIN = window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
                 const photoSrc = `${API_ORIGIN}${v.photo_url}`;
+                
+                // Fallback gracefully if image was deleted by Render's ephemeral storage
+                navPhotoEl.onerror = () => {
+                    navPhotoEl.style.display = 'none';
+                    navInitEl.style.display = 'flex';
+                };
+                pdPhotoEl.onerror = () => {
+                    pdPhotoEl.style.display = 'none';
+                    pdInitEl.style.display = 'flex';
+                };
+
                 navPhotoEl.src = photoSrc;
                 navPhotoEl.style.display = 'block';
                 navInitEl.style.display = 'none';

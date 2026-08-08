@@ -165,7 +165,7 @@ router.get('/my-stats', authMiddleware, async (req, res) => {
 // ─── URGENT SOS NGOS ─────────────────────────────────────────────────────────
 router.get('/sos-ngos', async (req, res) => {
   try {
-    const [ngos] = await pool.query('SELECT id, name, city, address, phone FROM ngos WHERE is_sos = 1 AND approved = 1');
+    const [ngos] = await pool.query('SELECT id, name, city, address, phone FROM ngos WHERE is_sos = 1 AND approved = 1 AND user_id IS NOT NULL');
     res.json(ngos);
   } catch (err) {
     console.error(err);
