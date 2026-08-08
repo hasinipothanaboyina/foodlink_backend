@@ -146,7 +146,7 @@ async function findBestNGO(donation, excludeIds = []) {
 router.get('/my-stats', authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations WHERE user_id = ? AND status = "completed"',
+      "SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations WHERE user_id = ? AND status = 'completed'",
       [req.user.id]
     );
     const stats = rows[0];
@@ -370,10 +370,10 @@ router.get('/my-impact', authMiddleware, async (req, res) => {
     const params = [];
     
     if (req.user.role === 'donor') {
-      whereClause = 'WHERE donor_phone = ? AND status = "completed"';
+      whereClause = "WHERE donor_phone = ? AND status = 'completed'";
       params.push(req.user.phone);
     } else {
-      whereClause = 'WHERE user_id = ? AND status = "completed"';
+      whereClause = "WHERE user_id = ? AND status = 'completed'";
       params.push(req.user.id);
     }
 
