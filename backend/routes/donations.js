@@ -75,7 +75,7 @@ const MAX_MATCH_DISTANCE_KM = 30; // Only match NGOs within 30 km
  */
 async function findBestNGO(donation, excludeIds = []) {
   // Only consider 'active' NGOs. Exclude 'limited' and 'offline' NGOs from automatic matching.
-  const [ngos] = await pool.query('SELECT * FROM ngos WHERE approved = 1 AND availability_status = "active"');
+  const [ngos] = await pool.query("SELECT * FROM ngos WHERE approved = 1 AND availability_status = 'active'");
   let best = null;
   let bestScore = Infinity;
 
