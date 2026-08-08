@@ -145,9 +145,17 @@ async function findBestNGO(donation, excludeIds = []) {
 // ─── IMPACT DASHBOARD STATS ──────────────────────────────────────────────────
 router.get('/my-stats', authMiddleware, async (req, res) => {
   try {
+    let whereClause = "WHERE user_id = ? AND status = 'completed'";
+    const params = [req.user.id];
+
+    if (req.user.role === 'donor') {
+      whereClause = "WHERE donor_phone = ? AND status = 'completed'";
+      params[0] = req.user.phone;
+    }
+
     const [rows] = await pool.query(
-      "SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations WHERE user_id = ? AND status = 'completed'",
-      [req.user.id]
+      `SELECT SUM(quantity) as totalKg, COUNT(id) as totalDonations FROM donations ${whereClause}`,
+      params
     );
     const stats = rows[0];
     const totalKg = stats.totalKg || 0;
